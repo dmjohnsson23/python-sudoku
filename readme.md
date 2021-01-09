@@ -2,7 +2,7 @@
 
 A library / command-line utility for solving sudoku puzzles.
 
-
+I originally wrote this in 2013. I recently re-discovered it while going through old projects and decided to make some upgrades and improvements. It is now significantly improved from the older version, and is able to solve any puzzle I have thus far been able to find online. Let me know if you find a solvable puzzle it can't solve!
 
 ## Example Usage (Command Line)
 
