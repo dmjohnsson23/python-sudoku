@@ -1,3 +1,7 @@
+"""
+These are a set of puzzles used for testing the application
+"""
+
 _=None #Just makes the puzzles look neater
 
 
@@ -15,6 +19,22 @@ puzzles = {
             [_, _, _,   _, _, _,    _, _, _],
             [_, _, _,   _, _, _,    _, _, _],
             [_, _, _,   _, _, _,    _, _, _]
+           ],
+           
+           
+           "Crosswise": # This puzzle is just used to test algorithms and is not meant to be solvable
+           [
+            [1, _, _,   _, _, _,    _, _, _],
+            [_, 2, _,   _, _, _,    _, _, _],
+            [_, _, 3,   _, _, _,    _, _, _],
+            
+            [_, _, _,   4, _, _,    _, _, _],
+            [_, _, _,   _, 5, _,    _, _, _],
+            [_, _, _,   _, _, 6,    _, _, _],
+            
+            [_, _, _,   _, _, _,    7, _, _],
+            [_, _, _,   _, _, _,    _, 8, _],
+            [_, _, _,   _, _, _,    _, _, 9]
            ],
            
            
