@@ -10,11 +10,11 @@ class TestBasicAlgorithms(unittest.TestCase):
         puzzle = Puzzle(puzzles['Crosswise'])
         eliminate_possibilities(*puzzle.iter_cells())
 
-        self.assertEqual(puzzle[0, 1].possible, [4, 5, 6, 7, 8, 9])
-        self.assertEqual(puzzle[0, 3].possible, [2, 3, 5, 6, 7, 8, 9])
-        self.assertEqual(puzzle[3, 0].possible, [2, 3, 5, 6, 7, 8, 9])
-        self.assertEqual(puzzle[3, 5].possible, [1, 2, 3, 7, 8, 9])
-        self.assertEqual(puzzle[0, 8].possible, [2, 3, 4, 5, 6, 7, 8])
+        self.assertEqual(puzzle[0, 1].possible, set([4, 5, 6, 7, 8, 9]))
+        self.assertEqual(puzzle[0, 3].possible, set([2, 3, 5, 6, 7, 8, 9]))
+        self.assertEqual(puzzle[3, 0].possible, set([2, 3, 5, 6, 7, 8, 9]))
+        self.assertEqual(puzzle[3, 5].possible, set([1, 2, 3, 7, 8, 9]))
+        self.assertEqual(puzzle[0, 8].possible, set([2, 3, 4, 5, 6, 7, 8]))
 
 
     def test_find_naked_singles(self):
@@ -34,17 +34,17 @@ class TestBasicAlgorithms(unittest.TestCase):
 
         find_naked_singles(*cells)
 
-        self.assertEqual(cells[0].possible, [1, 3, 4])
-        self.assertEqual(cells[1].possible, [1, 3, 6])
-        self.assertEqual(cells[2].possible, [3, 4])
+        self.assertEqual(cells[0].possible, set([1, 3, 4]))
+        self.assertEqual(cells[1].possible, set([1, 3, 6]))
+        self.assertEqual(cells[2].possible, set([3, 4]))
         self.assertEqual(cells[3].value, 2)
-        self.assertEqual(cells[3].possible, [])
-        self.assertEqual(cells[4].possible, [1, 3, 4, 5, 6, 7, 8, 9])
+        self.assertEqual(cells[3].possible, set([]))
+        self.assertEqual(cells[4].possible, set([1, 3, 4, 5, 6, 7, 8, 9]))
         self.assertEqual(cells[5].value, 7)
-        self.assertEqual(cells[5].possible, [])
-        self.assertEqual(cells[6].possible, [1, 3, 4, 5, 6, 7, 8, 9])
-        self.assertEqual(cells[7].possible, [1, 3, 4, 5, 6, 7, 8, 9])
-        self.assertEqual(cells[8].possible, [1, 3, 4, 5, 6, 7, 8, 9])
+        self.assertEqual(cells[5].possible, set([]))
+        self.assertEqual(cells[6].possible, set([1, 3, 4, 5, 6, 7, 8, 9]))
+        self.assertEqual(cells[7].possible, set([1, 3, 4, 5, 6, 7, 8, 9]))
+        self.assertEqual(cells[8].possible, set([1, 3, 4, 5, 6, 7, 8, 9]))
 
 
     def test_find_hidden_singles(self):
@@ -63,10 +63,10 @@ class TestBasicAlgorithms(unittest.TestCase):
         find_hidden_singles(row)
 
         self.assertEqual(row[5].value, 6)
-        self.assertEqual(row[5].possible, [])
-        self.assertEqual(row[6].possible, [7, 8, 9])
-        self.assertEqual(row[7].possible, [7, 8, 9])
-        self.assertEqual(row[8].possible, [7, 8, 9])
+        self.assertEqual(row[5].possible, set([]))
+        self.assertEqual(row[6].possible, set([7, 8, 9]))
+        self.assertEqual(row[7].possible, set([7, 8, 9]))
+        self.assertEqual(row[8].possible, set([7, 8, 9]))
 
 
                 
@@ -87,15 +87,15 @@ class TestLockedCandidateAlgorithms(unittest.TestCase):
         # Make sure the effect was correct
         for col in range(3):
             cell = puzzle[0, col]
-            self.assertEqual(cell.possible, [1, 2, 3, 4, 5, 6, 7, 8, 9], 
+            self.assertEqual(cell.possible, set([1, 2, 3, 4, 5, 6, 7, 8, 9]), 
             'First 3 (group source) cells should be unaffected by algorithm, coords: {}'.format(puzzle.index(cell)))
         for col in range(3, 9):
             cell = puzzle[0, col]
-            self.assertEqual(cell.possible, [2, 3, 4, 5, 6, 7, 8, 9], 
+            self.assertEqual(cell.possible, set([2, 3, 4, 5, 6, 7, 8, 9]), 
             '1 should be removed from all other cells in the row, coords: {}'.format(puzzle.index(cell)))
         for row in puzzle.rows[3:]:
             for cell in row:
-                self.assertEqual(cell.possible, [1, 2, 3, 4, 5, 6, 7, 8, 9], 
+                self.assertEqual(cell.possible, set([1, 2, 3, 4, 5, 6, 7, 8, 9]), 
                 'Cells below the third row should be unaffected, coords: {}'.format(puzzle.index(cell)))
     
 
@@ -110,17 +110,17 @@ class TestLockedCandidateAlgorithms(unittest.TestCase):
         # Make sure the effect was correct
         for col in range(3):
             cell = puzzle[0, col]
-            self.assertEqual(cell.possible, [1, 2, 3, 4, 5, 6, 7, 8, 9], 
+            self.assertEqual(cell.possible, set([1, 2, 3, 4, 5, 6, 7, 8, 9]), 
             'First 3 (group source) cells should be unaffected by algorithm, coords: {}'.format(puzzle.index(cell)))
-        self.assertEqual(puzzle[1, 0].possible, [1, 2, 3, 4, 6, 7, 8, 9], '5 should be removed from other cells in the first square')
-        self.assertEqual(puzzle[1, 1].possible, [1, 2, 3, 4, 6, 7, 8, 9], '5 should be removed from other cells in the first square')
-        self.assertEqual(puzzle[1, 2].possible, [1, 2, 3, 4, 6, 7, 8, 9], '5 should be removed from other cells in the first square')
-        self.assertEqual(puzzle[2, 0].possible, [1, 2, 3, 4, 6, 7, 8, 9], '5 should be removed from other cells in the first square')
-        self.assertEqual(puzzle[2, 1].possible, [1, 2, 3, 4, 6, 7, 8, 9], '5 should be removed from other cells in the first square')
-        self.assertEqual(puzzle[2, 2].possible, [1, 2, 3, 4, 6, 7, 8, 9], '5 should be removed from other cells in the first square')
+        self.assertEqual(puzzle[1, 0].possible, set([1, 2, 3, 4, 6, 7, 8, 9]), '5 should be removed from other cells in the first square')
+        self.assertEqual(puzzle[1, 1].possible, set([1, 2, 3, 4, 6, 7, 8, 9]), '5 should be removed from other cells in the first square')
+        self.assertEqual(puzzle[1, 2].possible, set([1, 2, 3, 4, 6, 7, 8, 9]), '5 should be removed from other cells in the first square')
+        self.assertEqual(puzzle[2, 0].possible, set([1, 2, 3, 4, 6, 7, 8, 9]), '5 should be removed from other cells in the first square')
+        self.assertEqual(puzzle[2, 1].possible, set([1, 2, 3, 4, 6, 7, 8, 9]), '5 should be removed from other cells in the first square')
+        self.assertEqual(puzzle[2, 2].possible, set([1, 2, 3, 4, 6, 7, 8, 9]), '5 should be removed from other cells in the first square')
         for row in puzzle.rows[3:]:
             for cell in row:
-                self.assertEqual(cell.possible, [1, 2, 3, 4, 5, 6, 7, 8, 9], 
+                self.assertEqual(cell.possible, set([1, 2, 3, 4, 5, 6, 7, 8, 9]), 
                 'Cells below the third row should be unaffected, coords: {}'.format(puzzle.index(cell)))
 
 
@@ -142,15 +142,15 @@ class TestFindHiddenMultiples(unittest.TestCase):
 
         find_hidden_multiples(house)
 
-        self.assertEqual(house.cells[0].possible, [1, 2])
-        self.assertEqual(house.cells[1].possible, [1, 2])
-        self.assertEqual(house.cells[2].possible, [3, 4, 5, 6, 7, 8, 9])
-        self.assertEqual(house.cells[3].possible, [3, 4, 5, 6, 7, 8, 9])
-        self.assertEqual(house.cells[4].possible, [3, 4, 5, 6, 7, 8, 9])
-        self.assertEqual(house.cells[5].possible, [3, 4, 5, 6, 7, 8, 9])
-        self.assertEqual(house.cells[6].possible, [3, 4, 5, 6, 7, 8, 9])
-        self.assertEqual(house.cells[7].possible, [3, 4, 5, 6, 7, 8, 9])
-        self.assertEqual(house.cells[8].possible, [3, 4, 5, 6, 7, 8, 9])
+        self.assertEqual(house.cells[0].possible, set([1, 2]))
+        self.assertEqual(house.cells[1].possible, set([1, 2]))
+        self.assertEqual(house.cells[2].possible, set([3, 4, 5, 6, 7, 8, 9]))
+        self.assertEqual(house.cells[3].possible, set([3, 4, 5, 6, 7, 8, 9]))
+        self.assertEqual(house.cells[4].possible, set([3, 4, 5, 6, 7, 8, 9]))
+        self.assertEqual(house.cells[5].possible, set([3, 4, 5, 6, 7, 8, 9]))
+        self.assertEqual(house.cells[6].possible, set([3, 4, 5, 6, 7, 8, 9]))
+        self.assertEqual(house.cells[7].possible, set([3, 4, 5, 6, 7, 8, 9]))
+        self.assertEqual(house.cells[8].possible, set([3, 4, 5, 6, 7, 8, 9]))
 
 
     def test_simple_3(self):
@@ -168,15 +168,15 @@ class TestFindHiddenMultiples(unittest.TestCase):
 
         find_hidden_multiples(house)
 
-        self.assertEqual(house.cells[0].possible, [7, 8, 9])
-        self.assertEqual(house.cells[1].possible, [7, 8, 9])
-        self.assertEqual(house.cells[2].possible, [7, 8, 9])
-        self.assertEqual(house.cells[3].possible, [1, 2, 3, 4, 5, 6])
-        self.assertEqual(house.cells[4].possible, [1, 2, 3, 4, 5, 6])
-        self.assertEqual(house.cells[5].possible, [1, 2, 3, 4, 5, 6])
-        self.assertEqual(house.cells[6].possible, [1, 2, 3, 4, 5, 6])
-        self.assertEqual(house.cells[7].possible, [1, 2, 3, 4, 5, 6])
-        self.assertEqual(house.cells[8].possible, [1, 2, 3, 4, 5, 6])
+        self.assertEqual(house.cells[0].possible, set([7, 8, 9]))
+        self.assertEqual(house.cells[1].possible, set([7, 8, 9]))
+        self.assertEqual(house.cells[2].possible, set([7, 8, 9]))
+        self.assertEqual(house.cells[3].possible, set([1, 2, 3, 4, 5, 6]))
+        self.assertEqual(house.cells[4].possible, set([1, 2, 3, 4, 5, 6]))
+        self.assertEqual(house.cells[5].possible, set([1, 2, 3, 4, 5, 6]))
+        self.assertEqual(house.cells[6].possible, set([1, 2, 3, 4, 5, 6]))
+        self.assertEqual(house.cells[7].possible, set([1, 2, 3, 4, 5, 6]))
+        self.assertEqual(house.cells[8].possible, set([1, 2, 3, 4, 5, 6]))
 
 
 class TestFindNakedMultiples(unittest.TestCase):
@@ -195,15 +195,15 @@ class TestFindNakedMultiples(unittest.TestCase):
 
         find_naked_multiples(house)
 
-        self.assertEqual(house.cells[0].possible, [1, 2])
-        self.assertEqual(house.cells[1].possible, [1, 2])
-        self.assertEqual(house.cells[2].possible, [3, 4, 5, 6, 7, 8, 9])
-        self.assertEqual(house.cells[3].possible, [3, 4, 5, 6, 7, 8, 9])
-        self.assertEqual(house.cells[4].possible, [3, 4, 5, 6, 7, 8, 9])
-        self.assertEqual(house.cells[5].possible, [3, 4, 5, 6, 7, 8, 9])
-        self.assertEqual(house.cells[6].possible, [3, 4, 5, 6, 7, 8, 9])
-        self.assertEqual(house.cells[7].possible, [3, 4, 5, 6, 7, 8, 9])
-        self.assertEqual(house.cells[8].possible, [3, 4, 5, 6, 7, 8, 9])
+        self.assertEqual(house.cells[0].possible, set([1, 2]))
+        self.assertEqual(house.cells[1].possible, set([1, 2]))
+        self.assertEqual(house.cells[2].possible, set([3, 4, 5, 6, 7, 8, 9]))
+        self.assertEqual(house.cells[3].possible, set([3, 4, 5, 6, 7, 8, 9]))
+        self.assertEqual(house.cells[4].possible, set([3, 4, 5, 6, 7, 8, 9]))
+        self.assertEqual(house.cells[5].possible, set([3, 4, 5, 6, 7, 8, 9]))
+        self.assertEqual(house.cells[6].possible, set([3, 4, 5, 6, 7, 8, 9]))
+        self.assertEqual(house.cells[7].possible, set([3, 4, 5, 6, 7, 8, 9]))
+        self.assertEqual(house.cells[8].possible, set([3, 4, 5, 6, 7, 8, 9]))
 
     def test_simple_3(self):
         house = House(
@@ -220,15 +220,15 @@ class TestFindNakedMultiples(unittest.TestCase):
 
         find_naked_multiples(house)
 
-        self.assertEqual(house.cells[0].possible, [7, 8, 9])
-        self.assertEqual(house.cells[1].possible, [7, 8, 9])
-        self.assertEqual(house.cells[2].possible, [7, 8, 9])
-        self.assertEqual(house.cells[3].possible, [1, 2, 3, 4, 5, 6])
-        self.assertEqual(house.cells[4].possible, [1, 2, 3, 4, 5, 6])
-        self.assertEqual(house.cells[5].possible, [1, 2, 3, 4, 5, 6])
-        self.assertEqual(house.cells[6].possible, [1, 2, 3, 4, 5, 6])
-        self.assertEqual(house.cells[7].possible, [1, 2, 3, 4, 5, 6])
-        self.assertEqual(house.cells[8].possible, [1, 2, 3, 4, 5, 6])
+        self.assertEqual(house.cells[0].possible, set([7, 8, 9]))
+        self.assertEqual(house.cells[1].possible, set([7, 8, 9]))
+        self.assertEqual(house.cells[2].possible, set([7, 8, 9]))
+        self.assertEqual(house.cells[3].possible, set([1, 2, 3, 4, 5, 6]))
+        self.assertEqual(house.cells[4].possible, set([1, 2, 3, 4, 5, 6]))
+        self.assertEqual(house.cells[5].possible, set([1, 2, 3, 4, 5, 6]))
+        self.assertEqual(house.cells[6].possible, set([1, 2, 3, 4, 5, 6]))
+        self.assertEqual(house.cells[7].possible, set([1, 2, 3, 4, 5, 6]))
+        self.assertEqual(house.cells[8].possible, set([1, 2, 3, 4, 5, 6]))
     
     def test_some_filled(self):
         house = House(
@@ -245,15 +245,15 @@ class TestFindNakedMultiples(unittest.TestCase):
 
         find_naked_multiples(house)
 
-        self.assertEqual(house.cells[0].possible, [1, 9])
-        self.assertEqual(house.cells[1].possible, [7, 8])
-        self.assertEqual(house.cells[2].possible, [2, 3, 4, 5, 6, 7, 8])
-        self.assertEqual(house.cells[3].possible, [])
-        self.assertEqual(house.cells[4].possible, [2, 3, 4, 5, 6, 7, 8])
-        self.assertEqual(house.cells[5].possible, [2, 3, 4, 5, 6, 7, 8])
-        self.assertEqual(house.cells[6].possible, [])
-        self.assertEqual(house.cells[7].possible, [2, 3, 4, 5, 6, 7, 8])
-        self.assertEqual(house.cells[8].possible, [1, 9])
+        self.assertEqual(house.cells[0].possible, set([1, 9]))
+        self.assertEqual(house.cells[1].possible, set([7, 8]))
+        self.assertEqual(house.cells[2].possible, set([2, 3, 4, 5, 6, 7, 8]))
+        self.assertEqual(house.cells[3].possible, set([]))
+        self.assertEqual(house.cells[4].possible, set([2, 3, 4, 5, 6, 7, 8]))
+        self.assertEqual(house.cells[5].possible, set([2, 3, 4, 5, 6, 7, 8]))
+        self.assertEqual(house.cells[6].possible, set([]))
+        self.assertEqual(house.cells[7].possible, set([2, 3, 4, 5, 6, 7, 8]))
+        self.assertEqual(house.cells[8].possible, set([1, 9]))
 
     def test_all_mixed(self):
         house = House(
@@ -270,13 +270,13 @@ class TestFindNakedMultiples(unittest.TestCase):
 
         find_naked_multiples(house)
 
-        self.assertEqual(house.cells[0].possible, [1, 9])
-        self.assertEqual(house.cells[1].possible, [7, 8])
+        self.assertEqual(house.cells[0].possible, set([1, 9]))
+        self.assertEqual(house.cells[1].possible, set([7, 8]))
         self.assertEqual(house.cells[2].value, 4)
-        self.assertEqual(house.cells[2].possible, [])
-        self.assertEqual(house.cells[3].possible, [3, 5, 6])
-        self.assertEqual(house.cells[4].possible, [2, 6])
-        self.assertEqual(house.cells[5].possible, [4, 5, 6])
-        self.assertEqual(house.cells[6].possible, [4, 7, 8])
-        self.assertEqual(house.cells[7].possible, [2, 3, 4, 5, 6])
-        self.assertEqual(house.cells[8].possible, [1, 9])
+        self.assertEqual(house.cells[2].possible, set())
+        self.assertEqual(house.cells[3].possible, set([3, 5, 6]))
+        self.assertEqual(house.cells[4].possible, set([2, 6]))
+        self.assertEqual(house.cells[5].possible, set([4, 5, 6]))
+        self.assertEqual(house.cells[6].possible, set([4, 7, 8]))
+        self.assertEqual(house.cells[7].possible, set([2, 3, 4, 5, 6]))
+        self.assertEqual(house.cells[8].possible, set([1, 9]))

@@ -38,7 +38,7 @@ def find_naked_singles(*cells):
     
     for cell in cells:
         if len(cell.possible) == 1:
-            cell.value = cell.possible[0]
+            cell.value = cell.possible.pop()
             modified = True
             
     return modified
@@ -107,7 +107,7 @@ def find_locked_candidates_squares(*squares):
                 continue
             for cell in house:
                 if cell not in square.cells:
-                    old_possible=cell.possible[:]
+                    old_possible=cell.possible.copy()
                     cell.remove_possible(possible)
                     if cell.possible != old_possible:
                         modified = True
@@ -157,7 +157,7 @@ def find_locked_candidates_rows_columns(*rows_and_columns):
                 # All values are in the same square
                 for cell in cells[0].square:
                     if cell not in cells:
-                        old_possible=cell.possible[:]
+                        old_possible=cell.possible.copy()
                         cell.remove_possible(possible)
                         if cell.possible != old_possible:
                             modified = True
@@ -212,7 +212,7 @@ def find_hidden_multiples(*houses):
                 #Eligible
                 cells = [house[index] for index in indices]
                 for cell in cells:
-                    old_possible = cell.possible[:]
+                    old_possible = cell.possible.copy()
                     for v in range(1, 10):
                         if v not in values:
                             cell.remove_possible(v)
@@ -267,7 +267,7 @@ def find_naked_multiples(*houses):
             if len(possible) == len(cells):
                 #Eligible
                 for cell in house:
-                    old_possible = cell.possible[:]
+                    old_possible = cell.possible.copy()
                     if cell not in cells:
                         for value in possible:
                             cell.remove_possible(value)

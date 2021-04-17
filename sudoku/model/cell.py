@@ -10,9 +10,9 @@ class Cell:
         self.puzzle = puzzle
 
         if self._value is None:
-            self.possible = possible if possible is not None else list(range(1, 10))
+            self.possible = set(possible or range(1, 10))
         else:
-            self.possible=[]
+            self.possible=set()
     
 
     @property
@@ -46,7 +46,20 @@ class Cell:
             if not self.possible and not self.value:
                 raise SudokuError('Cell has no possible values, last value ({}) removed'.format(value), self.puzzle, self)
             if len(self.possible) == 1:
-                self.value = self.possible[0]
+                self.value = self.possible.pop()
+    
+
+    def limit_possible(self, values):
+        """
+        Limit cell possibilities to only the given values
+        
+        This will only remove possibilities, never add them.
+        """
+        self.possible.intersection_update(set(values))
+    
+
+    def has_possible(self, value):
+        return value in self.possible or value == self.value
     
 
     @property
@@ -64,7 +77,7 @@ class Cell:
     def value(self, value):
         "Sets the value, and removes it from cell.possible for all cells in the same row, column, or square."
         self._value = value
-        self.possible = []
+        self.possible.clear()
         if self.row: self.row.eliminate_possible(value)
         if self.column: self.column.eliminate_possible(value)
         if self.square: self.square.eliminate_possible(value)
