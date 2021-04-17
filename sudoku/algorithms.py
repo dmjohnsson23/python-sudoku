@@ -3,12 +3,12 @@ import math
 
 __all__ = [
     'eliminate_possibilities',
-    'find_single_possibilities',
-    'find_exclusive_possibilities',
-    'find_aligned_in_square',
-    'find_aligned_in_row_or_column',
-    'find_exclusive_groups',
-    'find_constrained_groups',
+    'find_naked_singles',
+    'find_hidden_singles',
+    'find_locked_candidates_squares',
+    'find_locked_candidates_rows_columns',
+    'find_hidden_multiples',
+    'find_naked_multiples',
 ]
 
 def eliminate_possibilities(*cells):
@@ -27,7 +27,7 @@ def eliminate_possibilities(*cells):
                     
     
     
-def find_single_possibilities(*cells):
+def find_naked_singles(*cells):
     """
     If there is only one remaining possibility in any cells, sets those 
     cells to their only possible value
@@ -44,7 +44,7 @@ def find_single_possibilities(*cells):
     return modified
     
     
-def find_exclusive_possibilities(*houses):
+def find_hidden_singles(*houses):
     """
     Checks to see if there are any cells which are the only possible 
     location in their row, column, or square which can contain a certain 
@@ -63,7 +63,7 @@ def find_exclusive_possibilities(*houses):
     return modified
     
     
-def find_aligned_in_square(*squares):
+def find_locked_candidates_squares(*squares):
     """
     Searches all squares to see if all the possible cells for a value are in a 
     line. If so, removes that value from all other cells in that row/column. 
@@ -114,7 +114,7 @@ def find_aligned_in_square(*squares):
     return modified
 
 
-def find_aligned_in_row_or_column(*rows_and_columns):
+def find_locked_candidates_rows_columns(*rows_and_columns):
     """
     If all the possibilities for a value in any given row or column
     are also all in the same square, no other cells in that square
@@ -164,10 +164,11 @@ def find_aligned_in_row_or_column(*rows_and_columns):
     return modified
 
 
-def find_exclusive_groups(*houses):
+def find_hidden_multiples(*houses):
     """
-    If in any house there are x different values which can go in any of 
-    x different cells, removes all other values from those cells. 
+    If in any house there are x different values which can only 
+    go in any of  x different cells, removes all other values 
+    from those cells. 
     
     For example,
     ```
@@ -220,7 +221,7 @@ def find_exclusive_groups(*houses):
     return modified
 
 
-def find_constrained_groups(*houses):
+def find_naked_multiples(*houses):
     """
     If there are x cells in a house which all contain the same x 
     possibilities and *only* those x possibilities, then those 

@@ -17,7 +17,7 @@ class TestBasicAlgorithms(unittest.TestCase):
         self.assertEqual(puzzle[0, 8].possible, [2, 3, 4, 5, 6, 7, 8])
 
 
-    def test_find_single_possibilities(self):
+    def test_find_naked_singles(self):
         cells = [
             Cell(possible=[1, 3, 4]),
             Cell(possible=[1, 2, 3, 6]),
@@ -32,7 +32,7 @@ class TestBasicAlgorithms(unittest.TestCase):
 
         Row(*cells)
 
-        find_single_possibilities(*cells)
+        find_naked_singles(*cells)
 
         self.assertEqual(cells[0].possible, [1, 3, 4])
         self.assertEqual(cells[1].possible, [1, 3, 6])
@@ -47,7 +47,7 @@ class TestBasicAlgorithms(unittest.TestCase):
         self.assertEqual(cells[8].possible, [1, 3, 4, 5, 6, 7, 8, 9])
 
 
-    def test_find_exclusive_possibilities(self):
+    def test_find_hidden_singles(self):
         row = Row(
             Cell(1),
             Cell(2),
@@ -60,7 +60,7 @@ class TestBasicAlgorithms(unittest.TestCase):
             Cell(possible=[7, 8, 9]),
         )
 
-        find_exclusive_possibilities(row)
+        find_hidden_singles(row)
 
         self.assertEqual(row[5].value, 6)
         self.assertEqual(row[5].possible, [])
@@ -70,9 +70,9 @@ class TestBasicAlgorithms(unittest.TestCase):
 
 
                 
-class TestAlignedAlgorithms(unittest.TestCase):
+class TestLockedCandidateAlgorithms(unittest.TestCase):
 
-    def test_find_aligned_in_square(self):
+    def test_find_locked_candidates_squares(self):
         puzzle = Puzzle(puzzles['Blank'])
         # Remove the possibility of a 1 from certain cells
         puzzle[1, 0].remove_possible(1)
@@ -82,7 +82,7 @@ class TestAlignedAlgorithms(unittest.TestCase):
         puzzle[2, 1].remove_possible(1)
         puzzle[2, 2].remove_possible(1)
 
-        find_aligned_in_square(*puzzle.squares)
+        find_locked_candidates_squares(*puzzle.squares)
 
         # Make sure the effect was correct
         for col in range(3):
@@ -99,13 +99,13 @@ class TestAlignedAlgorithms(unittest.TestCase):
                 'Cells below the third row should be unaffected, coords: {}'.format(puzzle.index(cell)))
     
 
-    def test_find_aligned_in_row_or_column(self):
+    def test_find_locked_candidates_rows_columns(self):
         puzzle = Puzzle(puzzles['Blank'])
         # Remove the possibility of a 5 from certain cells
         for col in range(3, 9):
             puzzle[0, col].remove_possible(5)
 
-        find_aligned_in_row_or_column(*puzzle.rows)
+        find_locked_candidates_rows_columns(*puzzle.rows)
 
         # Make sure the effect was correct
         for col in range(3):
@@ -125,7 +125,7 @@ class TestAlignedAlgorithms(unittest.TestCase):
 
 
 
-class TestFindExclusiveGroups(unittest.TestCase):
+class TestFindHiddenMultiples(unittest.TestCase):
 
     def test_simple_2(self):
         house = House(
@@ -140,7 +140,7 @@ class TestFindExclusiveGroups(unittest.TestCase):
             Cell(possible=[3, 4, 5, 6, 7, 8, 9]),
         )
 
-        find_exclusive_groups(house)
+        find_hidden_multiples(house)
 
         self.assertEqual(house.cells[0].possible, [1, 2])
         self.assertEqual(house.cells[1].possible, [1, 2])
@@ -166,7 +166,7 @@ class TestFindExclusiveGroups(unittest.TestCase):
             Cell(possible=[1, 2, 3, 4, 5, 6]),
         )
 
-        find_constrained_groups(house)
+        find_hidden_multiples(house)
 
         self.assertEqual(house.cells[0].possible, [7, 8, 9])
         self.assertEqual(house.cells[1].possible, [7, 8, 9])
@@ -179,7 +179,7 @@ class TestFindExclusiveGroups(unittest.TestCase):
         self.assertEqual(house.cells[8].possible, [1, 2, 3, 4, 5, 6])
 
 
-class TestFindConstrainedGroups(unittest.TestCase):
+class TestFindNakedMultiples(unittest.TestCase):
     def test_simple_2(self):
         house = House(
             Cell(possible=[1, 2]),
@@ -193,7 +193,7 @@ class TestFindConstrainedGroups(unittest.TestCase):
             Cell(),
         )
 
-        find_constrained_groups(house)
+        find_naked_multiples(house)
 
         self.assertEqual(house.cells[0].possible, [1, 2])
         self.assertEqual(house.cells[1].possible, [1, 2])
@@ -218,7 +218,7 @@ class TestFindConstrainedGroups(unittest.TestCase):
             Cell(),
         )
 
-        find_constrained_groups(house)
+        find_naked_multiples(house)
 
         self.assertEqual(house.cells[0].possible, [7, 8, 9])
         self.assertEqual(house.cells[1].possible, [7, 8, 9])
@@ -243,7 +243,7 @@ class TestFindConstrainedGroups(unittest.TestCase):
             Cell(possible=[1, 9]),
         )
 
-        find_constrained_groups(house)
+        find_naked_multiples(house)
 
         self.assertEqual(house.cells[0].possible, [1, 9])
         self.assertEqual(house.cells[1].possible, [7, 8])
@@ -268,7 +268,7 @@ class TestFindConstrainedGroups(unittest.TestCase):
             Cell(possible=[1, 9]),
         )
 
-        find_constrained_groups(house)
+        find_naked_multiples(house)
 
         self.assertEqual(house.cells[0].possible, [1, 9])
         self.assertEqual(house.cells[1].possible, [7, 8])

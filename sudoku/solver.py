@@ -1,5 +1,6 @@
 from .algorithms import *
 from .exception import SudokuError
+import warnings
     
 def solve(puzzle, brute_force_levels = 1):
     """
@@ -10,12 +11,12 @@ def solve(puzzle, brute_force_levels = 1):
     """
     eliminate_possibilities(*puzzle.iter_cells())
     while any((
-        find_single_possibilities(*puzzle.iter_cells(skip_full_cells=True)),
-        find_exclusive_possibilities(*puzzle.iter_houses()),
-        find_aligned_in_square(*puzzle.squares),
-        find_aligned_in_row_or_column(*puzzle.rows, *puzzle.columns),
-        find_exclusive_groups(*puzzle.iter_houses()),
-        find_constrained_groups(*puzzle.iter_houses()),
+        find_naked_singles(*puzzle.iter_cells(skip_full_cells=True)),
+        find_hidden_singles(*puzzle.iter_houses()),
+        find_locked_candidates_squares(*puzzle.squares),
+        find_locked_candidates_rows_columns(*puzzle.rows, *puzzle.columns),
+        find_naked_multiples(*puzzle.iter_houses()),
+        find_hidden_multiples(*puzzle.iter_houses()),
         )): pass
     
         
@@ -30,6 +31,7 @@ def solve(puzzle, brute_force_levels = 1):
             brute_forced = brute_force_attack(puzzle, brute_force_levels)
             if brute_forced is not None:
                 puzzle.update(brute_forced)
+                warnings.warn("Brute force used; puzzle may not have a unique solution")
                 return True
                 
         return False

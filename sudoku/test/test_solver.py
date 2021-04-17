@@ -45,4 +45,5 @@ class TestSolver(unittest.TestCase):
 
     def test_brute_force(self):
         # This puzzle has 2 solutions and therefore can only be solved with brute force
-        self.solve_named_puzzle('Brute Force Prevails')
+        with self.assertWarns(Warning):
+            self.solve_named_puzzle('Brute Force Prevails')
