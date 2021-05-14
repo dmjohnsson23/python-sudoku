@@ -39,8 +39,28 @@ def _calculate_cage_combinations(cage_sum, cell_count, digits = [1, 2, 3, 4, 5, 
                 yield combination
 
 
-def calculate_cage_possibilities(cage_sum, cell_count):
+def combinations_to_possibilities(combinations):
+    """
+    Given an iterable of sets representing possible combinations for a cage, compute 
+    the candidate values for the cells withing the cage
+    """
     possibilities = set()
-    for combination in calculate_cage_combinations(cage_sum, cell_count):
+    for combination in combinations:
         possibilities = possibilities.union(combination)
     return frozenset(possibilities)
+
+
+def filter_combinations(combinations, *, forbid=None, allow=None, require=None):
+    """
+    Given an iterable of sets representing possible combinations for a cage, filter
+    the results based on parameters
+    """
+    allowed_digits = set(allow or range(1, 10))
+    if forbid is not None:
+        allowed_digits = allowed_digits.difference(forbid)
+    
+    combinations = filter(lambda combination: allowed_digits.intersection(combination) == combination, combinations)
+    if require is not None:
+        required_digits = set(require)
+        combinations = filter(lambda combination: combination.intersection(required_digits) == required_digits, combinations)
+    return tuple(combinations)

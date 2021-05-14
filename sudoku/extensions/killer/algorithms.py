@@ -11,7 +11,7 @@ def evaluate_permutations(*cages):
     for cage in cages:
         for index, permutation in reversed(enumerate(cage.permutations)):
             for cell, value in zip(cage.cells, permutation):
-                if not cell.has_possible(value):
+                if not cell.has_possible(value, True):
                     cage.permutations.pop(index)
 
 

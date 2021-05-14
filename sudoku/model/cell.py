@@ -58,8 +58,8 @@ class Cell:
         self.possible.intersection_update(set(values))
     
 
-    def has_possible(self, value):
-        return value in self.possible or value == self.value
+    def has_possible(self, value, true_on_actual_value=False):
+        return value in self.possible or (true_on_actual_value and value == self.value)
     
 
     @property
