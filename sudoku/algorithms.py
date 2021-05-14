@@ -1,4 +1,4 @@
-from .utils import all_equal
+from .utils import all_equal, candidate_coordinate_plot
 import math
 
 __all__ = [
@@ -9,6 +9,7 @@ __all__ = [
     'find_locked_candidates_rows_columns',
     'find_hidden_multiples',
     'find_naked_multiples',
+    'find_x_wing',
 ]
 
 def eliminate_possibilities(*cells):
@@ -65,6 +66,8 @@ def find_hidden_singles(*houses):
     
 def find_locked_candidates_squares(*squares):
     """
+    This technique is sometimes called "pointing pairs" or "pointing triples".
+
     Searches all squares to see if all the possible cells for a value are in a 
     line. If so, removes that value from all other cells in that row/column. 
 
@@ -116,6 +119,8 @@ def find_locked_candidates_squares(*squares):
 
 def find_locked_candidates_rows_columns(*rows_and_columns):
     """
+    This technique is also known as "box/line reduction"
+
     If all the possibilities for a value in any given row or column
     are also all in the same square, no other cells in that square
     can be the given value.
@@ -333,7 +338,35 @@ def find_x_wing(puzzle):
     ║ x │ x │   ║   │   │   ║   │ x │ x ║
     ╚═══╧═══╧═══╩═══╧═══╧═══╩═══╧═══╧═══╝
     """
-    return False # TODO
+    # TODO this algorithm could probably be tweaked to also find swordfishes, though it might complicate the logic
+    modified = False
+    for value in range(1, 10):
+        row_plot = candidate_coordinate_plot(puzzle.rows, value)
+        col_plot = candidate_coordinate_plot(puzzle.columns, value)
+        for plot in (row_plot, col_plot):
+            len_2_indices = [house_index for house_index, cell_indices in enumerate(plot) if len(cell_indices) == 2]
+            seen_index_sets = set()
+            for index in len_2_indices:
+                if plot[index] in seen_index_sets:
+                    # We've found an x-wing!
+                    # Now we can eliminate values from other cells in the other axis (e.g in the columns if we found 
+                    # the x-wing in the rows, or the rows if we found the x-wing in the columns)
+                    houses = [house 
+                            for house_index, house 
+                            in enumerate(puzzle.columns if plot is row_plot else puzzle.rows) 
+                            if plot[index] == plot[house_index]]
+                    for house in houses:
+                        for cell_index, cell in enumerate(house):
+                            if cell_index not in plot[index] and cell.has_possible(value):
+                                cell.remove_possible(value)
+                                modified = True
+
+                else:
+                    # Potential x-wing, we're not sure yet, save it for the next loop
+                    seen_index_sets.add(frozenset(plot[index]))
+
+
+    return modified
 
 
 def find_y_wing(puzzle):

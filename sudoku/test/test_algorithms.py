@@ -3,6 +3,7 @@ import unittest
 from ..model import *
 from ..algorithms import *
 from ..puzzles import puzzles
+from .utils import *
 
 class TestBasicAlgorithms(unittest.TestCase):
 
@@ -280,3 +281,34 @@ class TestFindNakedMultiples(unittest.TestCase):
         self.assertEqual(house.cells[6].possible, set([4, 7, 8]))
         self.assertEqual(house.cells[7].possible, set([2, 3, 4, 5, 6]))
         self.assertEqual(house.cells[8].possible, set([1, 9]))
+
+
+class TestXwingSwordfish(unittest.TestCase):
+    def test_find_xwing_rows(self):
+        puzzle = grid_with_possible_only_at_coordinates(
+            # The 4 wings
+            (2, 5),
+            (2, 8),
+            (6, 5),
+            (6, 8),
+            # Some values to eliminate
+            (1, 5),
+            (8, 5),
+            (7, 8),
+            (8, 8),
+            # Some values to leave alone
+            (0, 0),
+            (1, 1),
+            (1, 6)
+        )
+        modified = find_x_wing(puzzle)
+
+        self.assert_(modified, "Algorithm should detect x-wing")
+
+        self.assertFalse(puzzle[1, 5].has_possible(1), "1 should be removed from cell (1, 5)")
+        self.assertFalse(puzzle[8, 5].has_possible(1), "1 should be removed from cell (8, 5)")
+        self.assertFalse(puzzle[7, 8].has_possible(1), "1 should be removed from cell (7, 8)")
+        self.assertFalse(puzzle[8, 8].has_possible(1), "1 should be removed from cell (8, 8)")
+        self.assert_(puzzle[0, 0].has_possible(1), "1 should not be removed from cell (0, 0)")
+        self.assert_(puzzle[1, 1].has_possible(1), "1 should not be removed from cell (1, 1)")
+        self.assert_(puzzle[1, 6].has_possible(1), "1 should not be removed from cell (1, 6)")

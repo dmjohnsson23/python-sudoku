@@ -14,3 +14,16 @@ def all_equal(*args, key=None):
     return True
 
 
+def candidate_coordinate_plot(rows_or_columns, value):
+    """
+    Builds a list of sets, a set for each house of the indexes of cells 
+    which have a possibility for a given value
+    """
+    plot = []
+    for house in rows_or_columns:
+        plot.append(set())
+        for index, cell in enumerate(house):
+            if cell.has_possible(value):
+                plot[-1].add(index)
+    return plot
+
