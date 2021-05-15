@@ -74,7 +74,7 @@ class TestBasicAlgorithms(unittest.TestCase):
 class TestLockedCandidateAlgorithms(unittest.TestCase):
 
     def test_find_locked_candidates_squares(self):
-        puzzle = Puzzle(puzzles['Blank'])
+        puzzle = empty_grid()
         # Remove the possibility of a 1 from certain cells
         puzzle[1, 0].remove_possible(1)
         puzzle[1, 1].remove_possible(1)
@@ -101,7 +101,7 @@ class TestLockedCandidateAlgorithms(unittest.TestCase):
     
 
     def test_find_locked_candidates_rows_columns(self):
-        puzzle = Puzzle(puzzles['Blank'])
+        puzzle = empty_grid()
         # Remove the possibility of a 5 from certain cells
         for col in range(3, 9):
             puzzle[0, col].remove_possible(5)
@@ -303,12 +303,12 @@ class TestXwingSwordfish(unittest.TestCase):
         )
         modified = find_x_wing(puzzle)
 
-        self.assert_(modified, "Algorithm should detect x-wing")
+        self.assertTrue(modified, "Algorithm should detect x-wing")
 
         self.assertFalse(puzzle[1, 5].has_possible(1), "1 should be removed from cell (1, 5)")
         self.assertFalse(puzzle[8, 5].has_possible(1), "1 should be removed from cell (8, 5)")
         self.assertFalse(puzzle[7, 8].has_possible(1), "1 should be removed from cell (7, 8)")
         self.assertFalse(puzzle[8, 8].has_possible(1), "1 should be removed from cell (8, 8)")
-        self.assert_(puzzle[0, 0].has_possible(1), "1 should not be removed from cell (0, 0)")
-        self.assert_(puzzle[1, 1].has_possible(1), "1 should not be removed from cell (1, 1)")
-        self.assert_(puzzle[1, 6].has_possible(1), "1 should not be removed from cell (1, 6)")
+        self.assertTrue(puzzle[0, 0].has_possible(1), "1 should not be removed from cell (0, 0)")
+        self.assertTrue(puzzle[1, 1].has_possible(1), "1 should not be removed from cell (1, 1)")
+        self.assertTrue(puzzle[1, 6].has_possible(1), "1 should not be removed from cell (1, 6)")

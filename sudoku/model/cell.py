@@ -39,13 +39,13 @@ class Cell:
             return "Cell(value={}, possible={})".format(repr(self._value), repr(self.possible))
     
     
-    def remove_possible(self, value):
+    def remove_possible(self, value, auto_place_single=True):
         "Safely removes value from cell.possible"
         if value in self.possible:
             self.possible.remove(value)
             if not self.possible and not self.value:
                 raise SudokuError('Cell has no possible values, last value ({}) removed'.format(value), self.puzzle, self)
-            if len(self.possible) == 1:
+            if auto_place_single and len(self.possible) == 1:
                 self.value = self.possible.pop()
     
 

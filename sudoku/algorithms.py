@@ -355,10 +355,13 @@ def find_x_wing(puzzle):
                             for house_index, house 
                             in enumerate(puzzle.columns if plot is row_plot else puzzle.rows) 
                             if plot[index] == plot[house_index]]
-                    for house in houses:
+                    for house_index, house in enumerate(houses):
                         for cell_index, cell in enumerate(house):
                             if cell_index not in plot[index] and cell.has_possible(value):
+                                print('modified cell', cell_index, 'in', 'column' if plot is row_plot else 'row', house_index)
+                                print('possible before:', cell.possible)
                                 cell.remove_possible(value)
+                                print('possible after:', cell.possible)
                                 modified = True
 
                 else:

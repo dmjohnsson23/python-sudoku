@@ -12,5 +12,5 @@ def grid_with_possible_only_at_coordinates(*coordinates, starting_puzzle=None, c
     for row in range(9):
         for col in range(9):
             if (row, col) not in coordinates:
-                puzzle[row, col].remove_possible(candidate_value)
+                puzzle[row, col].remove_possible(candidate_value, False)
     return puzzle
