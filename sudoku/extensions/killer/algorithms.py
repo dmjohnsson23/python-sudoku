@@ -4,7 +4,7 @@ def eliminate_cage_possibilities(*cages):
     for cage in cages:
         possibilities = calculate_cage_possibilities(cage.sum, cage.cell_count)
         for cell in cage:
-            cell.limit_possible(possibilities)
+            cell.limit_possible(*possibilities)
 
 
 def evaluate_permutations(*cages):
@@ -20,7 +20,7 @@ def apply_permutations(*cages):
         if cage.permutations:
             for cell_possibility_sets in zip(*cage.permutations):
                 for cell, possibility_set in zip(cage.cells, cell_possibility_sets):
-                    cell.limit_possible(possibility_set)
+                    cell.limit_possible(*possibility_set)
 
 
 # TODO 45 rule: any row, column, or square can be thought of as a cage with 9 cells and a 

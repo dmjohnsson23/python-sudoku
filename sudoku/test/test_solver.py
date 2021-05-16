@@ -1,5 +1,5 @@
 from ..model import *
-from ..solver import solve
+from ..solver import Solver
 import sys
 import unittest
 from ..puzzles import puzzles
@@ -8,8 +8,9 @@ import traceback
 class TestSolver(unittest.TestCase):
     def solve_named_puzzle(self, name):
         puzzle = Puzzle(puzzles[name])
+        solver = Solver()
         try:
-            success = solve(puzzle)
+            success = solver.solve(puzzle)
             exception_message = ''
         except Exception as e:
             success = False

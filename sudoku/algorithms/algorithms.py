@@ -1,4 +1,7 @@
-from .utils import all_equal, candidate_coordinate_plot
+from ..utils import all_equal, candidate_coordinate_plot
+from .base_class import algorithm
+from ..stepper import StepUnitSetBuilder, StepUnit, PLACE, ELIMINATE, SOURCE
+from ..model import Puzzle
 import math
 
 __all__ = [
@@ -12,7 +15,8 @@ __all__ = [
     'find_x_wing',
 ]
 
-def eliminate_possibilities(*cells):
+@algorithm(difficulty=0, multistep=True)
+def eliminate_possibilities(puzzle: Puzzle):
     """
     Eliminates any possibilities from cells in which are not actually
     possible given the rules of sudoku. 
@@ -20,51 +24,47 @@ def eliminate_possibilities(*cells):
     This performs basic elimination based on filled cells in the house,
     without applying more complex logic
     """
-    for cell in cells:
-        if cell.is_full:
-            cell.square.eliminate_possible(cell.value)
-            cell.row.eliminate_possible(cell.value)
-            cell.column.eliminate_possible(cell.value)
+    for filled_cell in puzzle.iter_cells(skip_open_cells=True):
+        step_units = StepUnitSetBuilder(puzzle)
+        step_units.add_source_cells(filled_cell, value=filled_cell.value)
+        for empty_cell in puzzle.iter_cells(central_call=filled_cell, skip_full_cells=True):
+            if empty_cell.has_possible(filled_cell.value):
+                empty_cell.remove_possible(filled_cell.value)
+                step_units.add_eliminated_cells(empty_cell, value=filled_cell.value)
+        yield step_units.final()
+
                     
     
-    
-def find_naked_singles(*cells):
+@algorithm(difficulty=0, multistep=True)
+def find_naked_singles(puzzle: Puzzle):
     """
     If there is only one remaining possibility in any cells, sets those 
     cells to their only possible value
-
-    Returns True if the algorithm modified any cells
     """
-    modified = False
     
-    for cell in cells:
+    for cell in puzzle.iter_cells(skip_full_cells=True):
         if len(cell.possible) == 1:
             cell.value = cell.possible.pop()
-            modified = True
-            
-    return modified
+            yield (StepUnit(*puzzle.index(cell), (cell.value,), PLACE),)
+
     
-    
-def find_hidden_singles(*houses):
+@algorithm(difficulty=0, multistep=True)
+def find_hidden_singles(puzzle: Puzzle):
     """
     Checks to see if there are any cells which are the only possible 
     location in their row, column, or square which can contain a certain 
     value. If so, sets those cells to that exclusive value.
-
-    Returns True if the algorithm modified any cells
     """
-    modified = False
-    
-    for house in houses:
+    for house in puzzle.iter_houses():
         for value in range(1, 10):
             cells = house.get_cells_with_possible(value) #Note: Skips full cells
             if len(cells) == 1: #i.e. There is only one cell in house that can be value
                 cells[0].value = value
-                modified = True
-    return modified
+                yield (StepUnit(*puzzle.index(cells[0]), (value,), PLACE),)
+
     
-    
-def find_locked_candidates_squares(*squares):
+@algorithm(difficulty=1)
+def find_locked_candidates_squares(puzzle: Puzzle):
     """
     This technique is sometimes called "pointing pairs" or "pointing triples".
 
@@ -92,12 +92,8 @@ def find_locked_candidates_squares(*squares):
     ╠═══╪═══╪═══╬═══╪═══╪═══╬
     ```
     where x represents a possible location for a given value.
-
-    Returns True if the algorithm changed any cells
     """
-    modified = False
-    
-    for square in squares:
+    for square in puzzle.squares:
         for possible in range(1, 10):
             cells = square.get_cells_with_possible(possible)
             if all_equal(*cells, key=lambda cell: square.index(cell)[0]):
@@ -108,16 +104,20 @@ def find_locked_candidates_squares(*squares):
                 house = cells[0].column
             else:
                 continue
+            # All the cells are aligned; see if they eliminate anything
+            step_units = StepUnitSetBuilder(puzzle)
+            step_units.add_source_cells(*cells, value=possible)
             for cell in house:
-                if cell not in square.cells:
-                    old_possible=cell.possible.copy()
+                if cell not in square.cells and cell.is_open and cell.has_possible(possible):
                     cell.remove_possible(possible)
-                    if cell.possible != old_possible:
-                        modified = True
-    return modified
+                    step_units.add_eliminated_cells(cell, value=possible)
+            yield step_units.final()
+
+                
 
 
-def find_locked_candidates_rows_columns(*rows_and_columns):
+@algorithm(difficulty=1)
+def find_locked_candidates_rows_columns(puzzle: Puzzle):
     """
     This technique is also known as "box/line reduction"
 
@@ -146,30 +146,28 @@ def find_locked_candidates_rows_columns(*rows_and_columns):
     ╠═══╪═══╪═══╬═══╪═══╪═══╬═══╪═══╪═══╣
     ```
     where x represents a possible location for a given value.
-
-    Returns True if the algorithm modified any cells.
     """
-    modified = False
-    for house in rows_and_columns:
+    for house in (*puzzle.rows, *puzzle.columns):
         for possible in range(1, 10):
             cells = house.get_cells_with_possible(possible)
-            if len(cells) < 2: continue
+            if len(cells) < 2: continue # Hidden single, leave that for the appropriate algorithm
             squares_seen = set()
             for cell in cells:
                 index = house.index(cell)
                 squares_seen.add(math.floor(index/3))
             if len(squares_seen) == 1:
                 # All values are in the same square
+                step_units = StepUnitSetBuilder(puzzle)
+                step_units.add_source_cells(*cells, value=possible)
                 for cell in cells[0].square:
-                    if cell not in cells:
-                        old_possible=cell.possible.copy()
+                    if cell not in cells and cell.is_open and cell.has_possible(possible):
                         cell.remove_possible(possible)
-                        if cell.possible != old_possible:
-                            modified = True
-    return modified
+                        step_units.add_eliminated_cells(cell, value=possible)
+                yield step_units.final()
 
 
-def find_hidden_multiples(*houses):
+@algorithm(difficulty=2)
+def find_hidden_multiples(puzzle: Puzzle):
     """
     If in any house there are x different values which can only 
     go in any of  x different cells, removes all other values 
@@ -197,36 +195,38 @@ def find_hidden_multiples(*houses):
     ```
     where a, b, and c are possible values and '...' represents any number 
     of values besides those three.
-
-    Returns True if the algorithm changed any cells
     """
-    modified = False
-    for house in houses:
+    for house in puzzle.iter_houses():
+        # Here we build a mapping of cell indices of all cells which contain a set of possibility values to
+        # the possibility values that all those cells contain. E.g. and entry `(1, 4, 6): {3, 5, 7}` indicates
+        # That the cells at indices 1, 4, and 6 all have the possibility of being a 3, 5, or 7, and no other
+        # cells have the possibility of being any of those values
         mapping={}
         
         for value in range(1, 10):
             cells = house.get_cells_with_possible(value)
             indices = tuple(house.index(cell) for cell in cells)
             if indices in mapping:
-                mapping[indices].append(value)
+                mapping[indices].add(value)
             else:
-                mapping[indices] = [value]
+                mapping[indices] = {value,}
         
         for indices, values in mapping.items():
             if len(indices) == len(values):
                 #Eligible
                 cells = [house[index] for index in indices]
+                step_units = StepUnitSetBuilder(puzzle)
+                step_units.add_source_cells(*cells, values=values)
                 for cell in cells:
-                    old_possible = cell.possible.copy()
-                    for v in range(1, 10):
-                        if v not in values:
-                            cell.remove_possible(v)
-                            if cell.possible != old_possible:
-                                modified = True
-    return modified
+                    if cell.possible != values:
+                        removed_values = cell.possible.difference(values)
+                        cell.limit_possible(*values)
+                        step_units.add_eliminated_cells(cell, values=removed_values)
+                yield step_units.final()
 
 
-def find_naked_multiples(*houses):
+@algorithm(difficulty=2)
+def find_naked_multiples(puzzle: Puzzle):
     """
     If there are x cells in a house which all contain the same x 
     possibilities and *only* those x possibilities, then those 
@@ -254,12 +254,9 @@ def find_naked_multiples(*houses):
     ```
     where a and b are possible values and '...' represents 
     any values besides those two.
-
-    Returns True if the algorithm changed any cells
     """
-    modified = False
     
-    for house in houses:
+    for house in puzzle.iter_houses():
         mapping = {}
         for cell in house:
             p = tuple(cell.possible)
@@ -271,17 +268,17 @@ def find_naked_multiples(*houses):
         for possible, cells in mapping.items():
             if len(possible) == len(cells):
                 #Eligible
+                step_units = StepUnitSetBuilder(puzzle)
+                step_units.add_source_cells(*cells, values=possible)
                 for cell in house:
-                    old_possible = cell.possible.copy()
                     if cell not in cells:
-                        for value in possible:
-                            cell.remove_possible(value)
-                        if cell.possible != old_possible:
-                            modified = True
-        
-        return modified
+                        removed_values = cell.possible.difference(possible)
+                        cell.remove_possible(*possible)
+                        if removed_values:
+                            step_units.add_eliminated_cells(cell, values=removed_values)
+                yield step_units.final()
 
-
+@algorithm(difficulty=5)
 def find_x_wing(puzzle):
     """
     An x-wing is when there are 4 cells which are the corners of a given rectangular area of the grid, 
@@ -339,7 +336,6 @@ def find_x_wing(puzzle):
     ╚═══╧═══╧═══╩═══╧═══╧═══╩═══╧═══╧═══╝
     """
     # TODO this algorithm could probably be tweaked to also find swordfishes, though it might complicate the logic
-    modified = False
     for value in range(1, 10):
         row_plot = candidate_coordinate_plot(puzzle.rows, value)
         col_plot = candidate_coordinate_plot(puzzle.columns, value)
@@ -351,25 +347,24 @@ def find_x_wing(puzzle):
                     # We've found an x-wing!
                     # Now we can eliminate values from other cells in the other axis (e.g in the columns if we found 
                     # the x-wing in the rows, or the rows if we found the x-wing in the columns)
+                    step_units = StepUnitSetBuilder(puzzle)
                     houses = [house 
                             for house_index, house 
                             in enumerate(puzzle.columns if plot is row_plot else puzzle.rows) 
                             if plot[index] == plot[house_index]]
-                    for house_index, house in enumerate(houses):
+                    for house in houses:
                         for cell_index, cell in enumerate(house):
-                            if cell_index not in plot[index] and cell.has_possible(value):
-                                print('modified cell', cell_index, 'in', 'column' if plot is row_plot else 'row', house_index)
-                                print('possible before:', cell.possible)
+                            if cell_index in plot[index]:
+                                step_units.add_source_cells(cell, value=value)
+                            elif cell.has_possible(value):
                                 cell.remove_possible(value)
-                                print('possible after:', cell.possible)
-                                modified = True
+                                step_units.add_eliminated_cells(cell, value=value)
+                    yield step_units.final()
 
                 else:
                     # Potential x-wing, we're not sure yet, save it for the next loop
                     seen_index_sets.add(frozenset(plot[index]))
 
-
-    return modified
 
 
 def find_y_wing(puzzle):

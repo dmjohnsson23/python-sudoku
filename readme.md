@@ -60,8 +60,11 @@ puzzle = sudoku.Puzzle.parse("""
 -7-----95
 """)
 
+# Use a stepper object to record solve steps taken on the puzzle
+stepper = sudoku.Stepper(puzzle)
+
 # Use algorithms and inspect the puzzle state
-sudoku.algorithms.eliminate_possibilities(*puzzle.iter_cells())
+sudoku.algorithms.eliminate_possibilities.run(puzzle, stepper)
 puzzle[0, 1].value # 5
 puzzle[0, 2].possible # [6, 7, 9]
 
@@ -81,3 +84,12 @@ for puzzle_name, puzzle_array in puzzles:
     print(puzzle)
 
 ```
+
+## Goals / Non-Goals
+
+* The library should be extensible: It should be easy to create plugins to support sudoku variants
+* The library should produce meaningful output, which would be useful to show a human how the puzzle was solved
+* The library should avoid using techniques that are to overly difficult for a human to spot or compute
+* CPU and memory efficiency are not a focus at all, as this is often at odds with the previous points
+* No graphical interface will be provided; this is intended as a back-end library that a GUI application would use as a dependency
+* Command-line usage will remain limited, or possibly even removed, for the reasons listed above

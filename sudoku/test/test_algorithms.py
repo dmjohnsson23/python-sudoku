@@ -3,13 +3,17 @@ import unittest
 from ..model import *
 from ..algorithms import *
 from ..puzzles import puzzles
+from ..stepper import Stepper
 from .utils import *
+from sudoku import stepper
+
 
 class TestBasicAlgorithms(unittest.TestCase):
 
     def test_eliminate_possibilities(self):
         puzzle = Puzzle(puzzles['Crosswise'])
-        eliminate_possibilities(*puzzle.iter_cells())
+        stepper = Stepper(puzzle)
+        eliminate_possibilities.run(puzzle, stepper)
 
         self.assertEqual(puzzle[0, 1].possible, set([4, 5, 6, 7, 8, 9]))
         self.assertEqual(puzzle[0, 3].possible, set([2, 3, 5, 6, 7, 8, 9]))
@@ -19,49 +23,49 @@ class TestBasicAlgorithms(unittest.TestCase):
 
 
     def test_find_naked_singles(self):
-        cells = [
-            Cell(possible=[1, 3, 4]),
-            Cell(possible=[1, 2, 3, 6]),
-            Cell(possible=[2, 3, 4]),
-            Cell(possible=[2]),
-            Cell(),
-            Cell(7),
-            Cell(),
-            Cell(),
-            Cell(),
-        ]
+        puzzle = empty_grid()
+        stepper = Stepper(puzzle)
+        row = puzzle.rows[0]
 
-        Row(*cells)
+        row[0].limit_possible(1, 3, 4)
+        row[1].limit_possible(1, 2, 3, 6)
+        row[2].limit_possible(2, 3, 4)
+        row[3].limit_possible(2)
+        row[5].value = 7
 
-        find_naked_singles(*cells)
+        success = find_naked_singles.run(puzzle, stepper)
+        self.assertTrue(success, "Algorithm should update puzzle")
 
-        self.assertEqual(cells[0].possible, set([1, 3, 4]))
-        self.assertEqual(cells[1].possible, set([1, 3, 6]))
-        self.assertEqual(cells[2].possible, set([3, 4]))
-        self.assertEqual(cells[3].value, 2)
-        self.assertEqual(cells[3].possible, set([]))
-        self.assertEqual(cells[4].possible, set([1, 3, 4, 5, 6, 7, 8, 9]))
-        self.assertEqual(cells[5].value, 7)
-        self.assertEqual(cells[5].possible, set([]))
-        self.assertEqual(cells[6].possible, set([1, 3, 4, 5, 6, 7, 8, 9]))
-        self.assertEqual(cells[7].possible, set([1, 3, 4, 5, 6, 7, 8, 9]))
-        self.assertEqual(cells[8].possible, set([1, 3, 4, 5, 6, 7, 8, 9]))
+        self.assertEqual(row[0].possible, set([1, 3, 4]), "Other cells should not be affected")
+        self.assertEqual(row[1].possible, set([1, 2, 3, 6]), "Other cells should not be affected")
+        self.assertEqual(row[2].possible, set([2, 3, 4]), "Other cells should not be affected")
+        self.assertEqual(row[3].value, 2, "Naked value should be properly set")
+        self.assertEqual(row[3].possible, set(), "Naked value should be properly set")
+        self.assertEqual(row[4].possible, set([1, 2, 3, 4, 5, 6, 7, 8, 9]), "Other cells should not be affected")
+        self.assertEqual(row[5].value, 7, "Other cells should not be affected")
+        self.assertEqual(row[5].possible, set(), "Other cells should not be affected")
+        self.assertEqual(row[6].possible, set([1, 2, 3, 4, 5, 6, 7, 8, 9]), "Other cells should not be affected")
+        self.assertEqual(row[7].possible, set([1, 2, 3, 4, 5, 6, 7, 8, 9]), "Other cells should not be affected")
+        self.assertEqual(row[8].possible, set([1, 2, 3, 4, 5, 6, 7, 8, 9]), "Other cells should not be affected")
 
 
     def test_find_hidden_singles(self):
-        row = Row(
-            Cell(1),
-            Cell(2),
-            Cell(3),
-            Cell(4),
-            Cell(5),
-            Cell(possible=[6, 7, 8, 9]),
-            Cell(possible=[7, 8, 9]),
-            Cell(possible=[7, 8, 9]),
-            Cell(possible=[7, 8, 9]),
-        )
+        puzzle = empty_grid()
+        stepper = Stepper(puzzle)
+        row = puzzle.rows[0]
 
-        find_hidden_singles(row)
+        row[0].value = 1
+        row[1].value = 2
+        row[2].value = 3
+        row[3].value = 4
+        row[4].value = 5
+        row[5].limit_possible(6, 7, 8, 9)
+        row[6].limit_possible(7, 8, 9)
+        row[7].limit_possible(7, 8, 9)
+        row[8].limit_possible(7, 8, 9)
+        
+
+        find_hidden_singles.run(puzzle, stepper)
 
         self.assertEqual(row[5].value, 6)
         self.assertEqual(row[5].possible, set([]))
@@ -75,6 +79,7 @@ class TestLockedCandidateAlgorithms(unittest.TestCase):
 
     def test_find_locked_candidates_squares(self):
         puzzle = empty_grid()
+        stepper = Stepper(puzzle)
         # Remove the possibility of a 1 from certain cells
         puzzle[1, 0].remove_possible(1)
         puzzle[1, 1].remove_possible(1)
@@ -83,7 +88,7 @@ class TestLockedCandidateAlgorithms(unittest.TestCase):
         puzzle[2, 1].remove_possible(1)
         puzzle[2, 2].remove_possible(1)
 
-        find_locked_candidates_squares(*puzzle.squares)
+        find_locked_candidates_squares.run(puzzle, stepper)
 
         # Make sure the effect was correct
         for col in range(3):
@@ -102,11 +107,12 @@ class TestLockedCandidateAlgorithms(unittest.TestCase):
 
     def test_find_locked_candidates_rows_columns(self):
         puzzle = empty_grid()
+        stepper = Stepper(puzzle)
         # Remove the possibility of a 5 from certain cells
         for col in range(3, 9):
             puzzle[0, col].remove_possible(5)
 
-        find_locked_candidates_rows_columns(*puzzle.rows)
+        find_locked_candidates_rows_columns.run(puzzle, stepper)
 
         # Make sure the effect was correct
         for col in range(3):
@@ -129,19 +135,19 @@ class TestLockedCandidateAlgorithms(unittest.TestCase):
 class TestFindHiddenMultiples(unittest.TestCase):
 
     def test_simple_2(self):
-        house = House(
-            Cell(),
-            Cell(),
-            Cell(possible=[3, 4, 5, 6, 7, 8, 9]),
-            Cell(possible=[3, 4, 5, 6, 7, 8, 9]),
-            Cell(possible=[3, 4, 5, 6, 7, 8, 9]),
-            Cell(possible=[3, 4, 5, 6, 7, 8, 9]),
-            Cell(possible=[3, 4, 5, 6, 7, 8, 9]),
-            Cell(possible=[3, 4, 5, 6, 7, 8, 9]),
-            Cell(possible=[3, 4, 5, 6, 7, 8, 9]),
-        )
+        puzzle = empty_grid()
+        stepper = Stepper(puzzle)
+        
+        house = puzzle.rows[0]
+        house[2].remove_possible(1, 2)
+        house[3].remove_possible(1, 2)
+        house[4].remove_possible(1, 2)
+        house[5].remove_possible(1, 2)
+        house[6].remove_possible(1, 2)
+        house[7].remove_possible(1, 2)
+        house[8].remove_possible(1, 2)
 
-        find_hidden_multiples(house)
+        find_hidden_multiples.run(puzzle, stepper)
 
         self.assertEqual(house.cells[0].possible, set([1, 2]))
         self.assertEqual(house.cells[1].possible, set([1, 2]))
@@ -155,19 +161,18 @@ class TestFindHiddenMultiples(unittest.TestCase):
 
 
     def test_simple_3(self):
-        house = House(
-            Cell(),
-            Cell(),
-            Cell(),
-            Cell(possible=[1, 2, 3, 4, 5, 6]),
-            Cell(possible=[1, 2, 3, 4, 5, 6]),
-            Cell(possible=[1, 2, 3, 4, 5, 6]),
-            Cell(possible=[1, 2, 3, 4, 5, 6]),
-            Cell(possible=[1, 2, 3, 4, 5, 6]),
-            Cell(possible=[1, 2, 3, 4, 5, 6]),
-        )
+        puzzle = empty_grid()
+        stepper = Stepper(puzzle)
+        
+        house = puzzle.rows[0]
+        house[3].remove_possible(7, 8, 9)
+        house[4].remove_possible(7, 8, 9)
+        house[5].remove_possible(7, 8, 9)
+        house[6].remove_possible(7, 8, 9)
+        house[7].remove_possible(7, 8, 9)
+        house[8].remove_possible(7, 8, 9)
 
-        find_hidden_multiples(house)
+        find_hidden_multiples.run(puzzle, stepper)
 
         self.assertEqual(house.cells[0].possible, set([7, 8, 9]))
         self.assertEqual(house.cells[1].possible, set([7, 8, 9]))
@@ -182,19 +187,14 @@ class TestFindHiddenMultiples(unittest.TestCase):
 
 class TestFindNakedMultiples(unittest.TestCase):
     def test_simple_2(self):
-        house = House(
-            Cell(possible=[1, 2]),
-            Cell(possible=[1, 2]),
-            Cell(),
-            Cell(),
-            Cell(),
-            Cell(),
-            Cell(),
-            Cell(),
-            Cell(),
-        )
+        puzzle = empty_grid()
+        stepper = Stepper(puzzle)
+        
+        house = puzzle.rows[0]
+        house[0].limit_possible(1, 2)
+        house[1].limit_possible(1, 2)
 
-        find_naked_multiples(house)
+        find_naked_multiples.run(puzzle, stepper)
 
         self.assertEqual(house.cells[0].possible, set([1, 2]))
         self.assertEqual(house.cells[1].possible, set([1, 2]))
@@ -207,19 +207,15 @@ class TestFindNakedMultiples(unittest.TestCase):
         self.assertEqual(house.cells[8].possible, set([3, 4, 5, 6, 7, 8, 9]))
 
     def test_simple_3(self):
-        house = House(
-            Cell(possible=[7, 8, 9]),
-            Cell(possible=[7, 8, 9]),
-            Cell(possible=[7, 8, 9]),
-            Cell(),
-            Cell(),
-            Cell(),
-            Cell(),
-            Cell(),
-            Cell(),
-        )
+        puzzle = empty_grid()
+        stepper = Stepper(puzzle)
+        
+        house = puzzle.rows[0]
+        house[0].limit_possible(7, 8, 9)
+        house[1].limit_possible(7, 8, 9)
+        house[2].limit_possible(7, 8, 9)
 
-        find_naked_multiples(house)
+        find_naked_multiples.run(puzzle, stepper)
 
         self.assertEqual(house.cells[0].possible, set([7, 8, 9]))
         self.assertEqual(house.cells[1].possible, set([7, 8, 9]))
@@ -232,19 +228,17 @@ class TestFindNakedMultiples(unittest.TestCase):
         self.assertEqual(house.cells[8].possible, set([1, 2, 3, 4, 5, 6]))
     
     def test_some_filled(self):
-        house = House(
-            Cell(possible=[1, 9]),
-            Cell(possible=[7, 8, 9]),
-            Cell(),
-            Cell(6),
-            Cell(),
-            Cell(),
-            Cell(4),
-            Cell(),
-            Cell(possible=[1, 9]),
-        )
+        puzzle = empty_grid()
+        stepper = Stepper(puzzle)
+        
+        house = puzzle.rows[0]
+        house[0].limit_possible(1, 9)
+        house[1].limit_possible(7, 8, 9)
+        house[3].value = 6
+        house[6].value = 4
+        house[8].limit_possible(1, 9)
 
-        find_naked_multiples(house)
+        find_naked_multiples.run(puzzle, stepper)
 
         self.assertEqual(house.cells[0].possible, set([1, 9]))
         self.assertEqual(house.cells[1].possible, set([7, 8]))
@@ -257,24 +251,25 @@ class TestFindNakedMultiples(unittest.TestCase):
         self.assertEqual(house.cells[8].possible, set([1, 9]))
 
     def test_all_mixed(self):
-        house = House(
-            Cell(possible=[1, 9]),
-            Cell(possible=[7, 8, 9]),
-            Cell(possible=[1, 4, 9]),
-            Cell(possible=[3, 5, 6]),
-            Cell(possible=[2, 6, 9]),
-            Cell(possible=[1, 4, 5, 6]),
-            Cell(possible=[4, 7, 8, 9]),
-            Cell(possible=[1, 2, 3, 4, 5, 6]),
-            Cell(possible=[1, 9]),
-        )
+        puzzle = empty_grid()
+        stepper = Stepper(puzzle)
+        
+        house = puzzle.rows[0]
+        house[0].limit_possible(1, 9)
+        house[1].limit_possible(7, 8, 9)
+        house[2].limit_possible(1, 4, 9)
+        house[3].limit_possible(3, 5, 6)
+        house[4].limit_possible(2, 6, 9)
+        house[5].limit_possible(1, 4, 5, 6)
+        house[6].limit_possible(4, 7, 8, 9)
+        house[7].limit_possible(1, 2, 3, 4, 5, 6)
+        house[8].limit_possible(1, 9)
 
-        find_naked_multiples(house)
+        find_naked_multiples.run(puzzle, stepper)
 
         self.assertEqual(house.cells[0].possible, set([1, 9]))
         self.assertEqual(house.cells[1].possible, set([7, 8]))
-        self.assertEqual(house.cells[2].value, 4)
-        self.assertEqual(house.cells[2].possible, set())
+        self.assertEqual(house.cells[2].possible, set([4]))
         self.assertEqual(house.cells[3].possible, set([3, 5, 6]))
         self.assertEqual(house.cells[4].possible, set([2, 6]))
         self.assertEqual(house.cells[5].possible, set([4, 5, 6]))
@@ -301,9 +296,11 @@ class TestXwingSwordfish(unittest.TestCase):
             (1, 1),
             (1, 6)
         )
-        modified = find_x_wing(puzzle)
+        stepper = Stepper(puzzle)
 
-        self.assertTrue(modified, "Algorithm should detect x-wing")
+        success = find_x_wing.run(puzzle, stepper)
+
+        self.assertTrue(success, "Algorithm should detect x-wing")
 
         self.assertFalse(puzzle[1, 5].has_possible(1), "1 should be removed from cell (1, 5)")
         self.assertFalse(puzzle[8, 5].has_possible(1), "1 should be removed from cell (8, 5)")

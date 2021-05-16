@@ -39,23 +39,20 @@ class Cell:
             return "Cell(value={}, possible={})".format(repr(self._value), repr(self.possible))
     
     
-    def remove_possible(self, value, auto_place_single=True):
+    def remove_possible(self, *values):
         "Safely removes value from cell.possible"
-        if value in self.possible:
-            self.possible.remove(value)
-            if not self.possible and not self.value:
-                raise SudokuError('Cell has no possible values, last value ({}) removed'.format(value), self.puzzle, self)
-            if auto_place_single and len(self.possible) == 1:
-                self.value = self.possible.pop()
+        self.possible.difference_update(values)
+        if not self.possible and not self.value:
+            raise SudokuError('Cell has no possible values, {} removed'.format(values), self.puzzle, self)
     
 
-    def limit_possible(self, values):
+    def limit_possible(self, *values):
         """
         Limit cell possibilities to only the given values
         
         This will only remove possibilities, never add them.
         """
-        self.possible.intersection_update(set(values))
+        self.possible.intersection_update(values)
     
 
     def has_possible(self, value, true_on_actual_value=False):
@@ -75,12 +72,9 @@ class Cell:
 
     @value.setter
     def value(self, value):
-        "Sets the value, and removes it from cell.possible for all cells in the same row, column, or square."
+        "Sets the value, and clears the possible set"
         self._value = value
         self.possible.clear()
-        if self.row: self.row.eliminate_possible(value)
-        if self.column: self.column.eliminate_possible(value)
-        if self.square: self.square.eliminate_possible(value)
     
 
     @property
