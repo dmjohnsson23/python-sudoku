@@ -289,8 +289,8 @@ class TestXwingSwordfish(unittest.TestCase):
             # Some values to eliminate
             (1, 5),
             (8, 5),
+            (3, 8),
             (7, 8),
-            (8, 8),
             # Some values to leave alone
             (0, 0),
             (1, 1),

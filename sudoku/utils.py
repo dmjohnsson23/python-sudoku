@@ -16,7 +16,7 @@ def all_equal(*args, key=None):
 
 def candidate_coordinate_plot(rows_or_columns, value):
     """
-    Builds a list of sets, a set for each house of the indexes of cells 
+    Builds a list of sets, one set for each house, of the indexes of cells 
     which have a possibility for a given value
     """
     plot = []

@@ -82,6 +82,13 @@ class Stepper:
             _apply_steps(puzzle_after, step_units)
             yield Step(algorithm, step_units, puzzle_before, puzzle_after)
             puzzle_before = puzzle_after
+    
+
+    def print_debug_log(self, print_func=print, **print_args):
+        for algorithm, step_units in self._steps:
+            print_func(f"\nfound {algorithm}:")
+            for unit in step_units:
+                print_func(f"\t{unit.mode} {unit.values}: ({unit.row}, {unit.column})")
 
     
 

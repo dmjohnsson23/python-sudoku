@@ -339,31 +339,35 @@ def find_x_wing(puzzle):
     for value in range(1, 10):
         row_plot = candidate_coordinate_plot(puzzle.rows, value)
         col_plot = candidate_coordinate_plot(puzzle.columns, value)
+        # For the purpose of this code, we define the "main axis" as the axis that the houses travel along, 
+        # e.g the vertical axis for rows, and the horizontal axis for columns, and the "secondary axis" as
+        # the axis running along the house itself, e.g. the horizontal axis for rows, and the vertical for
+        # columns.
         for plot in (row_plot, col_plot):
+            # This is a list of indices for houses (along the primary axis) which have only two cells which can contain the value
             len_2_indices = [house_index for house_index, cell_indices in enumerate(plot) if len(cell_indices) == 2]
+            # This is a set of frozensets which each contain cell indices (on the secondary axis) which can contain the value
             seen_index_sets = set()
-            for index in len_2_indices:
-                if plot[index] in seen_index_sets:
-                    # We've found an x-wing!
-                    # Now we can eliminate values from other cells in the other axis (e.g in the columns if we found 
-                    # the x-wing in the rows, or the rows if we found the x-wing in the columns)
+            for primary_loop_main_axis_index in len_2_indices:
+                if plot[primary_loop_main_axis_index] in seen_index_sets:
+                    # We've seen this exact same set of 2 cell indices before. This means we've found an x-wing!
+                    # Now we can eliminate values from other cells in the secondary axis
                     step_units = StepUnitSetBuilder(puzzle)
-                    houses = [house 
-                            for house_index, house 
-                            in enumerate(puzzle.columns if plot is row_plot else puzzle.rows) 
-                            if plot[index] == plot[house_index]]
-                    for house in houses:
-                        for cell_index, cell in enumerate(house):
-                            if cell_index in plot[index]:
-                                step_units.add_source_cells(cell, value=value)
-                            elif cell.has_possible(value):
-                                cell.remove_possible(value)
-                                step_units.add_eliminated_cells(cell, value=value)
+                    cross_axis_houses = puzzle.columns if plot is row_plot else puzzle.rows
+                    for cross_axis_cell_index in plot[primary_loop_main_axis_index]:
+                        cross_axis_house = cross_axis_houses[cross_axis_cell_index]
+                        for main_axis_cell_index, main_axis_cell in enumerate(cross_axis_house):
+                            if plot[primary_loop_main_axis_index] == plot[main_axis_cell_index]:
+                                step_units.add_source_cells(main_axis_cell, value=value)
+                            elif main_axis_cell.has_possible(value):
+                                main_axis_cell.remove_possible(value)
+                                step_units.add_eliminated_cells(main_axis_cell, value=value)
                     yield step_units.final()
+                    break
 
                 else:
                     # Potential x-wing, we're not sure yet, save it for the next loop
-                    seen_index_sets.add(frozenset(plot[index]))
+                    seen_index_sets.add(frozenset(plot[primary_loop_main_axis_index]))
 
 
 
