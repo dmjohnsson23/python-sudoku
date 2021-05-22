@@ -1,1 +1,3 @@
-from .algorithms import *
+from .fundamentals import *
+from .easy import *
+from .medium import *

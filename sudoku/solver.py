@@ -1,5 +1,5 @@
 from .exception import SudokuError
-from .stepper import Stepper
+from .stepper import Stepper, StepUnit, PLACE
 from .model import Puzzle
 from dataclasses import dataclass
 import warnings
@@ -26,36 +26,26 @@ class Solver:
         """
         if stepper is None:
             stepper = Stepper(puzzle)
-        algorithms = self.variant_context.get_algorithms(self.algorithms)
-        while True:
-            try:
-                for alg in algorithms:
-                    if alg.run(puzzle, stepper):
-                        # break out of the for loop and start over with the most basic algorithm. This ensures 
-                        # we are always using the most simple techniques possible, only reaching for advanced 
-                        # techniques when required
-                        break 
-                else:
-                    # All algorithms ran without changing anything, break the outer while loop
-                    break
-            except SudokuError as err:
-                # We want to add the stepper to any raised sudoku errors for debug purposes
-                err.stepper = stepper
-                raise err
+        
+        for _ in self.step_through_algorithms(puzzle, stepper):
+            pass
         
         if puzzle.is_solved:
             ok, problem_cell = self.variant_context.check(puzzle)
-            if not ok:
-                raise SudokuError("Invalid Solution", puzzle, problem_cell)
+            if ok:
+                return Solution(True, stepper, puzzle)
+            else:
+                raise SudokuError("Invalid Solution", puzzle, cell=problem_cell, stepper=stepper)
         else:
             if brute_force_level:
                 brute_forced = self.brute_force_solve(puzzle, brute_force_level)
                 if brute_forced is not None:
                     puzzle.update(brute_forced)
                     warnings.warn("Brute force used; puzzle may not have a unique solution")
-                    return True
+                    return Solution(True, stepper, puzzle)
                     
-            return False
+            return Solution(False, stepper, puzzle)
+
 
     def brute_force_solve(self, puzzle: Puzzle, recurse_level: int, stepper: Stepper = None) -> Solution:
         """
@@ -74,16 +64,49 @@ class Solver:
         if stepper is None:
             stepper = Stepper(puzzle)
         for cell in puzzle.iter_cells():
+            cell_index = puzzle.index(cell)
             for possible in cell.possible:
-                copy = puzzle.copy()
+                copy_puzzle = puzzle.copy()
                 copy_stepper = stepper.copy()
-                copy_stepper.record_step('brute_force')
-                copy_cell = copy[puzzle.index(cell)]
+                copy_cell = copy_puzzle[cell_index]
                 copy_cell.value = possible
+                copy_stepper.record_step('brute_force', StepUnit(*cell_index, (possible,), PLACE))
                 try:
-                    success, steps, puzzle = self.solve(copy, brute_force_levels = (recurse_level-1) if recurse_level else 0)
+                    solution = self.solve(copy_puzzle, brute_force_levels = (recurse_level-1) if recurse_level else 0)
                 except SudokuError:
                     continue #Try the next possibility
                 else:
-                    if success:
-                        return success, steps, copy
+                    if solution.success:
+                        return solution
+    
+
+    def step_through_algorithms(self, puzzle: Puzzle, stepper: Stepper):
+        """
+        Run through the list of algorithms repeatedly, from the first until an algorithm 
+        reports having updated the puzzle. Then restarts from the beginning. Stop iterating 
+        if, after a full cycle, no algorithm has reported a change.
+
+        This is a generator function. It yields None after every completed step to allow 
+        stepping through a solve one step at a time. The current state can be examined if 
+        desired by inspecting the puzzle and stepper objects passed as parameters, as they 
+        are modified in-place.
+        """
+        algorithms = self.variant_context.get_algorithms(self.algorithms)
+        # TODO we need to get setup algorithms (negative difficulty), run them once each, and remove them from the list
+        while True:
+            try:
+                for alg in algorithms:
+                    if alg.run(puzzle, stepper):
+                        # break out of the for loop and start over with the most basic algorithm. This ensures 
+                        # we are always using the most simple techniques possible, only reaching for advanced 
+                        # techniques when required
+                        yield
+                        if alg is not algorithms[0]: # If this is the first algorithm, no need to run it again
+                            break 
+                else:
+                    # All algorithms ran without changing anything, break the outer while loop
+                    break
+            except SudokuError as err:
+                # We want to add the stepper to any raised sudoku errors for debug purposes
+                err.stepper = stepper
+                raise err

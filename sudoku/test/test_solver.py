@@ -1,16 +1,23 @@
 from ..model import *
+from .models import TestPuzzle
 from ..solver import Solver
 import sys
 import unittest
-from ..puzzles import puzzles
+from ..puzzles import puzzles, solutions
 import traceback
+from ..variant_context import ClassicContext
 
 class TestSolver(unittest.TestCase):
     def solve_named_puzzle(self, name):
-        puzzle = Puzzle(puzzles[name])
-        solver = Solver()
+        if name in solutions:
+            puzzle = TestPuzzle(puzzles[name], solutions[name])
+        else:
+            puzzle = Puzzle(puzzles[name])
+
+        solver = Solver(ClassicContext())
         try:
-            success = solver.solve(puzzle)
+            solution = solver.solve(puzzle)
+            success = solution.success
             exception_message = ''
         except Exception as e:
             success = False

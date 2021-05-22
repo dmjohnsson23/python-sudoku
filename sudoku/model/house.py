@@ -43,6 +43,13 @@ class House:
                 r.append(cell)
         return r
     
+    def has_value_set(self, value):
+        "Returns True if there is a cell in this house with the given value set"
+        for cell in self.cells:
+            if cell.value == value:
+                return True
+        return False
+    
 
 
 class Square(House):

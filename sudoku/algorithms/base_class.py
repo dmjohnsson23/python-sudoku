@@ -3,10 +3,13 @@ class Algorithm:
     A representation of an algorithm that can be applied to a sudoku puzzle or a variant thereof
     """
     registry = {}
+    _reserved_names = {'start', 'brute_force'}
 
     def __init__(self, name, difficulty):
         self.name = name
         self.difficulty = difficulty
+        if name in Algorithm._reserved_names: 
+            raise ValueError(f'Algorithm name "{name}" is reserved for internal usage')
         if name in Algorithm.registry: 
             raise ValueError(f'Algorithm names must be unique; "{name}" has already been registered')
         Algorithm.registry[name] = self
@@ -52,13 +55,3 @@ def algorithm(difficulty, multistep=False):
         AlgorithmFromDecorator.__name__ = generator_function.__name__
         return AlgorithmFromDecorator(generator_function.__name__, difficulty)
     return decorator
-
-
-algorithm(-99)
-def start():
-    """
-    This is a dummy algorithm used by the stepper to indicate the initial state of the puzzle. 
-    It never does anything. This is just a placeholder to reserve the name in the algorithm
-    registry.
-    """
-    pass

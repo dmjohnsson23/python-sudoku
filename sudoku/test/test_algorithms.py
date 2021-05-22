@@ -73,6 +73,34 @@ class TestBasicAlgorithms(unittest.TestCase):
         self.assertEqual(row[7].possible, set([7, 8, 9]))
         self.assertEqual(row[8].possible, set([7, 8, 9]))
 
+    def test_hidden_singles_no_double_placement(self):
+        """
+        Ensure that, while running find_hidden_singles, the algorithm does not place
+        a value in a house that already contains that value.
+
+        This is important because, in one loop the algorithm might place a 7 in row 1,
+        then, since it is a multi-step algorithm, it will continue running without
+        calling eliminate_possibilities. Thus, it might accidentally mis-interpret
+        the left-over possibility for a 7 in box 1 as a second hidden single, placing two
+        7s in box 1.
+        """
+
+        puzzle = empty_grid()
+        stepper = Stepper(puzzle)
+
+        for col in range(1, 9):
+            puzzle[0, col].remove_possible(7)
+        puzzle[1, 0].remove_possible(7)
+        puzzle[1, 2].remove_possible(7)
+        puzzle[2, 0].remove_possible(7)
+        puzzle[2, 1].remove_possible(7)
+        puzzle[2, 2].remove_possible(7)
+
+        find_hidden_singles.run(puzzle, stepper)
+
+        self.assertEqual(puzzle[0, 0].value, 7)
+        self.assertIsNone(puzzle[1, 1].value, "Don't place 7 in box 1 twice")
+
 
                 
 class TestLockedCandidateAlgorithms(unittest.TestCase):
