@@ -1,5 +1,9 @@
+"""
+This is convenience code used for manual testing and debugging of the library via the python 
+interactive shell. Import this with a wildcard import and test away.
+"""
 from sudoku import *
-from sudoku.puzzles import puzzles, solutions
+from sudoku.test.puzzles import puzzles, solutions
 from sudoku.test.models import TestPuzzle
 from sudoku.test.utils import empty_grid, grid_with_possible_only_at_coordinates
 
@@ -10,6 +14,10 @@ def named_puzzle(name):
         return Puzzle(puzzles[name])
 
 def live_debug_solve(puzzle, context=None):
+    """
+    Run the solver algorithms, printing out each step as it is completed. Useful 
+    to debug tricky situations such as if the solver gets stuck in an infinate loop
+    """
     if isinstance(puzzle, str):
         puzzle = named_puzzle(puzzle)
     elif not isinstance(puzzle, Puzzle):

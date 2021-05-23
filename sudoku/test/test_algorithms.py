@@ -2,7 +2,7 @@ import unittest
 
 from ..model import *
 from ..algorithms import *
-from ..puzzles import puzzles
+from .puzzles import puzzles
 from ..stepper import Stepper
 from .utils import *
 from sudoku import stepper

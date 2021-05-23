@@ -3,7 +3,7 @@ from .models import TestPuzzle
 from ..solver import Solver
 import sys
 import unittest
-from ..puzzles import puzzles, solutions
+from .puzzles import puzzles, solutions
 import traceback
 from ..variant_context import ClassicContext
 
