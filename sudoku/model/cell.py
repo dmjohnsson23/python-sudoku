@@ -2,17 +2,63 @@ from ..exception import SudokuError
 
 class Cell:
     "One cell of the puzzle"
-    def __init__(self, value=None, possible=None, row=None, column=None, square=None, puzzle=None):
+    variant_context = None
+
+
+    def __init__(self, value=None, possible=None, puzzle=None, coords=None):
+        if self.variant_context is None:
+            if puzzle is not None and puzzle.variant_context is not None:
+                self.variant_context = puzzle.variant_context
+            else:
+                raise NotImplementedError(
+                    "Puzzle cannot be created without a variant context. Either "
+                    "pass the context to the constructor, or create the puzzle "
+                    "from within the context")
         self._value = value
-        self.row = row
-        self.column = column
-        self.square = square
-        self.puzzle = puzzle
+        self._puzzle = puzzle
+        self._coords = coords
 
         if self._value is None:
             self.possible = set(possible or range(1, 10))
         else:
             self.possible=set()
+
+        self._features = {}
+    
+
+    def __getattr__(self, name):
+        try:
+            features = object.__getattribute__(self, '_features')
+            if name in features:
+                return features[name]
+        except AttributeError:
+            pass # _features is not yet defined
+        raise AttributeError(f"No object property or cell feature '{name}'")
+    
+
+    def __setattr__(self, name, value):
+        try:
+            is_feature = name in object.__getattribute__(self, '_features')
+        except AttributeError:
+            # The features dict hasn't even been set yet. (We are proably setting it right now)
+            is_feature = False
+        if is_feature:
+            raise AttributeError('Cell features are read-only')
+        super().__setattr__(name, value)
+
+    
+    
+
+    @property
+    def coords(self):
+        if not self._coords and self._puzzle:
+            self._coords = self._puzzle.index(self)
+        return self._coords
+    
+
+    @property
+    def puzzle(self):
+        return self._puzzle
     
 
     @property
@@ -33,8 +79,8 @@ class Cell:
     
 
     def __repr__(self):
-        if self.puzzle:
-            return "Cell(value={}, possible={}) @ {}".format(repr(self._value), repr(self.possible), self.puzzle.index(self))
+        if self._coords or self._puzzle:
+            return "Cell(value={}, possible={}) @ {}".format(repr(self._value), repr(self.possible), self.coords)
         else:
             return "Cell(value={}, possible={})".format(repr(self._value), repr(self.possible))
     

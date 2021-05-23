@@ -6,8 +6,8 @@ class Algorithm:
     _reserved_names = {'start', 'brute_force'}
 
     def __init__(self, name, difficulty):
-        self.name = name
-        self.difficulty = difficulty
+        self._name = name
+        self._difficulty = difficulty
         if name in Algorithm._reserved_names: 
             raise ValueError(f'Algorithm name "{name}" is reserved for internal usage')
         if name in Algorithm.registry: 
@@ -21,6 +21,17 @@ class Algorithm:
         Returns True if the algorithm modified the puzzle, False otherwise
         """
         raise NotImplementedError('Algorithm base class should be extended, or use the algorithm decorator')
+    
+    @property
+    def name(self):
+        return self._name
+    
+    @property
+    def difficulty(self):
+        return self._difficulty
+    
+    def __hash__(self):
+        return hash(self._name)
 
 
 

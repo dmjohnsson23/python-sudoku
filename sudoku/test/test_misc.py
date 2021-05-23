@@ -1,7 +1,7 @@
 import unittest
 
-from ..model import *
-from ..puzzles import puzzles
+from ..variant_context import ClassicContext
+from .puzzles import puzzles
 from .utils import *
 
 
@@ -13,7 +13,7 @@ class TestTestingUtilities(unittest.TestCase):
             self.assertIsNone(cell.value, "All given values should be present in the puzzle")
 
     def test_grid_with_possible_only_at_coordinates(self):
-        base_puzzle = Puzzle(puzzles["Already Solved"])
+        base_puzzle = ClassicContext().Puzzle(puzzles["Already Solved"])
         working_puzzle = None
         for value in range(1, 10):
             coords = set()

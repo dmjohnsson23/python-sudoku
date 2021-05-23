@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from .model import Puzzle
 from typing import Tuple
+from copy import copy
 
 ELIMINATE = 'eliminate' # Eliminated values from a cell
 PLACE = 'place' # Place the final value in a cell
@@ -89,6 +90,13 @@ class Stepper:
             print_func(f"\nfound {algorithm}:")
             for unit in step_units:
                 print_func(f"\t{unit.mode} {unit.values}: ({unit.row}, {unit.column})")
+    
+
+    def copy(self):
+        new_copy = copy(self)
+        new_copy._starting_puzzle = self._starting_puzzle.copy()
+        new_copy._steps = copy(self._steps)
+        return new_copy
 
     
 

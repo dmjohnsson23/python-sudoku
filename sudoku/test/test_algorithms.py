@@ -1,6 +1,7 @@
 import unittest
 
 from ..model import *
+from ..variant_context import ClassicContext
 from ..algorithms import *
 from .puzzles import puzzles
 from ..stepper import Stepper
@@ -11,7 +12,7 @@ from sudoku import stepper
 class TestBasicAlgorithms(unittest.TestCase):
 
     def test_eliminate_possibilities(self):
-        puzzle = Puzzle(puzzles['Crosswise'])
+        puzzle = ClassicContext().Puzzle(puzzles['Crosswise'])
         stepper = Stepper(puzzle)
         eliminate_possibilities.run(puzzle, stepper)
 

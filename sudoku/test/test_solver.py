@@ -1,5 +1,5 @@
 from ..model import *
-from .models import TestPuzzle
+from .models import ClassicTestContext
 from ..solver import Solver
 import sys
 import unittest
@@ -8,15 +8,15 @@ import traceback
 from ..variant_context import ClassicContext
 
 class TestSolver(unittest.TestCase):
-    def solve_named_puzzle(self, name):
+    def solve_named_puzzle(self, name, *solver_args, **solver_kwargs):
         if name in solutions:
-            puzzle = TestPuzzle(puzzles[name], solutions[name])
+            puzzle = ClassicTestContext().Puzzle(puzzles[name], solutions[name])
         else:
-            puzzle = Puzzle(puzzles[name])
+            puzzle = ClassicContext().Puzzle(puzzles[name])
 
         solver = Solver(ClassicContext())
         try:
-            solution = solver.solve(puzzle)
+            solution = solver.solve(puzzle, *solver_args, **solver_kwargs)
             success = solution.success
             exception_message = ''
         except Exception as e:
@@ -24,7 +24,7 @@ class TestSolver(unittest.TestCase):
             exception_message = '\n\nException Raised:\n'+traceback.format_exc()
         if not success:
             self.fail("Failed to solve puzzle.\n\nInitial state:\n{}\n\nFinal State:\n{}{}".format(
-                Puzzle(puzzles[name]),
+                ClassicContext().Puzzle(puzzles[name]),
                 puzzle.debug_string,
                 exception_message
             ))
@@ -54,4 +54,4 @@ class TestSolver(unittest.TestCase):
     def test_brute_force(self):
         # This puzzle has 2 solutions and therefore can only be solved with brute force
         with self.assertWarns(Warning):
-            self.solve_named_puzzle('Brute Force Prevails')
+            self.solve_named_puzzle('Brute Force Prevails', brute_force_level=1)

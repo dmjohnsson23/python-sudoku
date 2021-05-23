@@ -1,7 +1,7 @@
-from ..model import *
+from ..variant_context import ClassicContext
 
 def empty_grid():
-    return Puzzle([[None]*9]*9)
+    return ClassicContext().Puzzle([[None]*9]*9)
 
 def grid_with_possible_only_at_coordinates(*coordinates, starting_puzzle=None, candidate_value=1):
     """

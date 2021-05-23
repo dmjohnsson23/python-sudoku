@@ -31,7 +31,7 @@ class Solver:
             pass
         
         if puzzle.is_solved:
-            ok, problem_cell = self.variant_context.check(puzzle)
+            ok, problem_cell = self.variant_context.check_puzzle(puzzle)
             if ok:
                 return Solution(True, stepper, puzzle)
             else:
@@ -40,7 +40,7 @@ class Solver:
             if brute_force_level:
                 brute_forced = self.brute_force_solve(puzzle, brute_force_level)
                 if brute_forced is not None:
-                    puzzle.update(brute_forced)
+                    puzzle.update(brute_forced.puzzle)
                     warnings.warn("Brute force used; puzzle may not have a unique solution")
                     return Solution(True, stepper, puzzle)
                     
@@ -72,7 +72,7 @@ class Solver:
                 copy_cell.value = possible
                 copy_stepper.record_step('brute_force', StepUnit(*cell_index, (possible,), PLACE))
                 try:
-                    solution = self.solve(copy_puzzle, brute_force_levels = (recurse_level-1) if recurse_level else 0)
+                    solution = self.solve(copy_puzzle, brute_force_level = (recurse_level-1) if recurse_level else 0)
                 except SudokuError:
                     continue #Try the next possibility
                 else:

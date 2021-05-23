@@ -1,24 +1,55 @@
-from .house import Row, Column, Square
-from .cell import Cell
 import itertools
-from copy import deepcopy
+from copy import deepcopy, copy
 
 class Puzzle:
     "The entire puzzle"
+    variant_context = None
     
-    def __init__(self, puzzle_array):
-        self.rows=[Row(*(Cell(cell, puzzle=self) for cell in row)) for row in puzzle_array]
-        self.columns=[Column(*(cell for cell in column)) for column in zip(*self.rows)]
-        if len(self.rows) != 9 or len(self.columns) != 9:
-            raise ValueError('A sudoku puzzle must be a 9x9 grid')
-        self.squares=[]
-        for Y in range(0, 9, 3):
-            for X in range(0, 9, 3):
-                square=[]
-                for y in range(3):
-                    for x in range(3):
-                        square.append(self[Y+y, X+x])
-                self.squares.append(Square(*square))
+    def __init__(self, puzzle_array=None, *, variant_context=None, **feature_map):
+        if self.variant_context is None:
+            if variant_context is not None:
+                self.variant_context = variant_context
+            else:
+                raise NotImplementedError(
+                    "Puzzle cannot be created without a variant context. Either "
+                    "pass the context to the constructor, or create the puzzle "
+                    "from within the context")
+        if puzzle_array is None: 
+            puzzle_array = [[None]*9]*9
+        
+        Cell = self.variant_context.Cell
+
+        self.cells=tuple([
+            tuple([
+                Cell(cell_value, puzzle=self, coords=(row_index, col_index))
+                for col_index, cell_value in enumerate(row)
+            ]) 
+            for row_index, row in enumerate(puzzle_array)
+        ])
+        self._features = {}
+        self.variant_context.init_features(self, feature_map)
+    
+
+    def __getattr__(self, name):
+        try:
+            features = object.__getattribute__(self, '_features')
+            if name in features:
+                return features[name]
+        except AttributeError:
+            pass # _features is not yet defined
+        raise AttributeError(f"No object property or puzzle feature '{name}'")
+    
+
+    def __setattr__(self, name, value):
+        try:
+            is_feature = name in object.__getattribute__(self, '_features')
+        except AttributeError:
+            # The features dict hasn't even been set yet. (We are proably setting it right now)
+            is_feature = False
+        if is_feature:
+            raise AttributeError('Puzzle features are read-only')
+        super().__setattr__(name, value)
+
     
 
     @classmethod
