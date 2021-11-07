@@ -6,28 +6,18 @@ import unittest
 from .puzzles import puzzles, solutions
 import traceback
 from ..variant_context import ClassicContext
+from .utils import solve_puzzle
 
 class TestSolver(unittest.TestCase):
     def solve_named_puzzle(self, name, *solver_args, **solver_kwargs):
         if name in solutions:
-            puzzle = ClassicTestContext().Puzzle(puzzles[name], solutions[name])
+            context = ClassicTestContext()
+            puzzle = context.Puzzle(puzzles[name], solutions[name])
         else:
-            puzzle = ClassicContext().Puzzle(puzzles[name])
+            context = ClassicContext()
+            puzzle = context.Puzzle(puzzles[name])
 
-        solver = Solver(ClassicContext())
-        try:
-            solution = solver.solve(puzzle, *solver_args, **solver_kwargs)
-            success = solution.success
-            exception_message = ''
-        except Exception as e:
-            success = False
-            exception_message = '\n\nException Raised:\n'+traceback.format_exc()
-        if not success:
-            self.fail("Failed to solve puzzle.\n\nInitial state:\n{}\n\nFinal State:\n{}{}".format(
-                ClassicContext().Puzzle(puzzles[name]),
-                puzzle.debug_string,
-                exception_message
-            ))
+        solve_puzzle(self, context, puzzle, *solver_args, **solver_kwargs)
 
     
     def test_already_solved(self):

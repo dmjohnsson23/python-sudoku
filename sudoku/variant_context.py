@@ -25,19 +25,22 @@ class VariantContext:
         """
         Get the ordered list of algorithms to use for solving the puzzle, optionally filtering based on the description parameter
         """
-        raise NotImplementedError("The variant context must either be a subclass which implements this method, or a VariantComposition which combines variants")
+        raise NotImplementedError("The variant context must either be a subclass which implements this method, or a HybridContext which combines variants")
     
     def init_features(self, puzzle, feature_map):
         """
         Initialize the features of the puzzle (houses, regions, cages, and other clues)
         """
-        raise NotImplementedError("The variant context must either be a subclass which implements this method, or a VariantComposition which combines variants")
+        raise NotImplementedError("The variant context must either be a subclass which implements this method, or a HybridContext which combines variants")
 
     def check_puzzle(self, puzzle):
         """
         Verify that the puzzle, in it's current state, does not violate any constraints for this context
+
+        Should return a tuple (False, Cell) if there is a problem, indicating which cell the violation was found in.
+        Otherwise, return (True, None)
         """
-        raise NotImplementedError("The variant context must either be a subclass which implements this method, or a VariantComposition which combines variants")
+        raise NotImplementedError("The variant context must either be a subclass which implements this method, or a HybridContext which combines variants")
 
 
 class ClassicContext(VariantContext):
@@ -91,7 +94,7 @@ class ClassicContext(VariantContext):
 class HybridContext(VariantContext):
     def __new__(cls, *args, **kwargs):
         # Revert back to a non-singleton, only for hybrids
-        return object.__new__(*args, **kwargs)
+        return object.__new__(cls, *args, **kwargs)
     
     def __init__(self, *contexts):
         self._subcontexts = contexts
@@ -110,6 +113,7 @@ class HybridContext(VariantContext):
 
     def check_puzzle(self, puzzle):
         for context in self._subcontexts:
-            if not context.check_puzzle(puzzle):
-                return False
-        return True
+            okay, cell = context.check_puzzle(puzzle)
+            if not okay:
+                return False, cell
+        return True, None
